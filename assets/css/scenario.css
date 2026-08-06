@@ -495,3 +495,43 @@ body.is-outbreak #outbreak { display: block; }
   .ob-grid { grid-template-columns: minmax(0, 1fr); }
   .ob-grid > :last-child { grid-column: auto; }
 }
+
+/* ------------------------------------------------- coalition node status -- */
+
+.ob-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.nodegroup { margin-bottom: 10px; }
+
+.nodegroup__hd {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.nodegroup__code { color: var(--series-1); letter-spacing: 0.08em; }
+.nodegroup__n { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+.nodegroup__track { height: 5px; background: var(--surface-3); }
+.nodegroup__fill { height: 100%; transition: width 0.4s linear; }
+
+.lost {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.lost:last-child { border-bottom: 0; }
+.lost__hd { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.lost__node { color: var(--status-critical); flex: none; font-weight: 700; }
+
+.lost__name {
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lost__relay { margin-top: 1px; color: var(--text-muted); font-size: 10px; }

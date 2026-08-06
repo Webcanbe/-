@@ -31,15 +31,6 @@
     BRA: ['USA', 'ESP']
   };
 
-  /* 상황판·전문용 국가명. 파트너 명부(영문)는 그대로 두고 여기서만 씁니다. */
-  var NATION_KO = {
-    USA: '미국', CHN: '중국', RUS: '러시아', IND: '인도', GBR: '영국',
-    FRA: '프랑스', DEU: '독일', JPN: '일본', KOR: '대한민국', ITA: '이탈리아',
-    TUR: '튀르키예', CAN: '캐나다', BRA: '브라질', SAU: '사우디아라비아',
-    ISR: '이스라엘', AUS: '호주', IDN: '인도네시아', IRN: '이란',
-    ESP: '스페인', PAK: '파키스탄'
-  };
-
   /* 점령 단계. 모든 단계는 색 외에 기호와 낱말을 함께 답니다. */
   var LEVELS = [
     { at: 0, key: 'secure', label: '통제', token: 'good', glyph: '■' },
@@ -171,7 +162,7 @@
     { t: 11200, text: '방폭문 01 돌파', sub: '반경 40미터 · 단말층' },
     { t: 13400, text: '최종 데이터 보존 단계 진입', sub: '강화 저장소로 기록 중', archive: true },
     { t: 22000, text: '기록 봉인 완료', sub: '이후 조작 입력을 받지 않음' },
-    { t: 25000, text: '단말 폐쇄', sub: '전지구 작전 지휘부 — 송신 종료', final: true }
+    { t: 25000, text: '단말 폐쇄', sub: '대한민국 조정본부 — 송신 종료', final: true }
   ];
 
   var VICTORY = [
@@ -180,13 +171,12 @@
     { t: 5400, text: '국제 데이터 백본 복구', sub: '대양 횡단 회선 정상 · 손실률 0.4%' },
     { t: 8000, text: '대한민국 국군 지휘망 복구', sub: '노드 DEF-08 응답 · 방어선 유지' },
     { t: 10600, text: '위성 통신 성좌 정상', sub: '6기 전량 응답' },
-    { t: 13200, text: '파트너 노드 40 / 40 응답', sub: '전 연합 보고 재개' },
-    { t: 16000, text: '전지구 작전 지휘부 복구', sub: '통상 근무로 복귀', final: true }
+    { t: 13200, text: '연합 노드 40 / 40 응답', sub: '전 협력기관 보고 재개' },
+    { t: 16000, text: '대한민국 조정본부 복구', sub: '통상 근무로 복귀', final: true }
   ];
 
   global.WDMA_SCENARIO = {
     links: LINKS,
-    nationKo: NATION_KO,
     levels: LEVELS,
     signals: SIGNALS,
     bulletins: BULLETINS,

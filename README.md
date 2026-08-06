@@ -1,121 +1,120 @@
-# WDMA — Global Operations Command
+# WDMA 대한민국 조정본부
 
-Console interface for the World Disaster Management Authority coordination
-dashboard.
+WDMA(세계 재난 관리부) 대한민국 조정본부 지휘 콘솔입니다. 단말 KOR-S04,
+국가재난지휘본부 서울 상황실 기준으로 구성했습니다.
 
-> **EXERCISE — SIMULATED DATA — NOT FOR OPERATIONAL USE.**
-> This is a UI build wrapped around a fictional outbreak drill. The World
-> Disaster Management Authority is a fictional organization, every record and
-> figure is generated from a fixed seed, and the classification markings are
-> exercise props. Nothing here is connected to a live feed, telemetry source or
-> partner system, and nothing reflects any real organization, event, pathogen or
-> system. **The access gate does not check, store or transmit credentials** —
-> any input is admitted.
+> **모의 자료 — 실제 운용 금지.**
+> 인터페이스 개발용 시제입니다. WDMA는 실재하지 않는 조직이고, 모든 기록과
+> 수치는 고정 시드로 생성되며, 취급구분 표기는 연출입니다. 실제 보고체계·
+> 관측망·협력기관과 연결되어 있지 않고, 실재하는 사건·병원체·능력을 반영하지
+> 않습니다. **접속 게이트는 자격증명을 검사·저장·전송하지 않습니다** — 무엇을
+> 입력해도 통과합니다.
 
-## The scenario
+## 실행
 
-The console opens on an access gate. After the operator is admitted the watch
-floor runs normally for a short while, then the situation develops:
-
-| T+ | What happens |
-|---|---|
-| 0s | Access granted — normal watch |
-| 20s | Full-screen warning: 생물학적 사건 발생 |
-| 30s | Outbreak state takes over |
-
-**Everything from that first warning onward is in Korean, on pure black.** The
-outbreak state drops any stored theme, removes the theme control, and pins the
-surface to `#000` regardless of the OS setting — there is nothing left to
-switch. The dashboard sections are hidden and the console chrome, banners and
-footer all change over, so no English is left on screen apart from the WDMA and
-WDMA-COSMIC identifiers and the operator ID that was typed in.
-
-From there a contagion walks out of the seed nation (미국) along a travel graph
-across the twenty member states. Nations move through
-통제 → 주의 → 교전 → 붕괴 → 두절, incoming traffic reports what each one is
-seeing, and 22 full-screen warnings fire as the global picture degrades —
-민간 통신망, 국제 데이터 백본, 대한민국 국군 지휘망, 위성 통신 성좌, partner
-nodes going silent.
-
-**Directives** (`Q W E R T`, or click) spend command capacity, which regenerates
-over time: 광역 봉쇄 발령 · 의료 공수 투입 · 통신망 격리 · 대응제 개발 가속 ·
-계엄 선포.
-
-**승리** — run the counter-agent to 100% while holding global infection under
-35%; the console walks back up through a restoration sequence and returns to
-normal watch. **패배** — global infection reaches 88%, and the terminal plays out
-its own end: 본 단말 반경 1,000미터 접촉, blast doors one by one, then
-최종 데이터 보존 단계. There is no restart control; reload to run it again.
-
-Suppression alone will not finish it. While the counter-agent is incomplete an
-uneliminated reservoir keeps seeding fresh clusters, and that pressure grows
-with elapsed time, so every run reaches a verdict.
-
-Balance was tuned against a headless harness: an idle terminal is lost around
-T+83s, inattentive play around T+113s, and focused play wins around T+50s.
-
-## Running it
-
-No build step, no dependencies. Open `index.html` in a browser, or serve the
-directory:
+의존성도 빌드 단계도 없습니다. `index.html`을 브라우저로 열거나 디렉터리를
+서비스하면 됩니다.
 
 ```sh
 npx serve .
 ```
 
-## What's on the console
+## 화면 구성
 
-| Block | Contents |
+| 구획 | 내용 |
 |---|---|
-| **Classification banners** | Top and bottom markings, carrying the exercise caveat |
-| **Command bar** | OPCON level, operator, terminal, live date-time group |
-| **Secure link strip** | Link state, channel, cipher suite, peer key fingerprint, RTT, frame error, COMSEC keymat with rekey countdown, session timer, TEMPEST zone |
-| **01 · Partner Countries & Institutions** | 40 partner organizations across four sectors with node IDs and access markings, plus 20 member states |
-| **02 · Operational Picture** | Scope filters, hero readout and four KPI readouts with sparklines, event trend by hazard class, tasking by AO, precedence mix and operational phase, active tasking log |
-| **03 · Force Readiness** | Committed-vs-available capacity meters and command posture — global, not scoped by the filters |
+| 취급구분 띠 | 상·하단 표기 |
+| 지휘 상단 | 작전태세, 운용자, 단말, 일시 |
+| 보안 회선 | 회선 상태, 채널, 암호 방식, 상대 키 지문, 왕복지연, 프레임 오류, 암호자재 재교환 잔여시간, 접속 시간, 템페스트 |
+| 01 · 협력 국가 및 기관 | 4개 분야 40개 기관(노드 번호·취급구분 포함)과 회원국 20개국 |
+| 02 · 작전 현황 | 범위 조건, 대표 수치와 계기 4종, 재해구분별 보고 추이, 작전지역별 임무, 우선순위 구성과 작전 단계, 진행 임무 기록 |
+| 03 · 전력 대비태세 | 투입 대비 가용 능력과 지휘 태세 — 전지구 상비 능력이라 위 조건이 적용되지 않습니다 |
 
-The four filters (AO, hazard class, precedence, reporting window) sit in one row
-above everything they scope, and the operational views all re-render against the
-same slice. The readiness block sits outside that scope and says so.
+범위 조건(작전지역·재해구분·우선순위·보고 기간)은 적용 대상 위 한 줄에 모여
+있고, 작전 현황의 모든 화면이 같은 범위로 다시 그려집니다.
 
-Session state is live: the date-time group, session timer, rekey countdown and
-RTT all tick.
+## 상황 전개
 
-## Files
+접속 후 잠시 통상 근무가 이어지다 상황이 전개됩니다.
+
+| 경과 | 내용 |
+|---|---|
+| 0초 | 접속 허가 — 통상 근무 |
+| 20초 | 전면 경고: 생물학적 사건 발생 |
+| 30초 | 사태 화면 전환 |
+
+**사태가 시작되면 화면은 순검정으로 고정됩니다.** 저장된 테마를 지우고
+`data-theme`를 해제하며 테마 전환 버튼 자체를 제거하므로, 운영체제 설정과
+무관하게 표면이 `#000`으로 유지되고 바꿀 수단이 남지 않습니다.
+
+미국에서 시작한 전파가 이동 경로 그래프를 따라 회원국 20개국으로 번집니다.
+각국은 통제 → 주의 → 교전 → 붕괴 → 두절 단계를 오가고, 국가별 수신 전문이
+계속 들어옵니다.
+
+### 경고
+
+경고는 **자동으로 사라지지 않습니다.** 운용자가 확인을 눌러야 넘어가며, 경고가
+떠 있는 동안 **단말 전체가 정지합니다** — 일시·접속 시간·재교환 잔여시간·경과
+시간이 모두 멈추고, 전파도 진행하지 않으며, 조치 명령은 전부 비활성화됩니다.
+최종 데이터 보존 단계만은 기록 저장이 끝나야 확인 버튼이 열립니다.
+
+### 연합 노드 붕괴
+
+40개 협력기관은 소재 회원국의 감염률이 각자의 문턱을 넘으면 상실됩니다. 회원국
+목록에 없는 소재지의 기관은 특정 국가에 귀속시키지 않고 전지구 지표를 따릅니다.
+노드가 상실되면 **어느 국을 거쳐 전달됐는지**를 함께 보고합니다 — 해당 노드는
+이미 침묵했으므로, 아직 살아 있는 인접국 중 감염률이 낮은 쪽이 중계국으로
+기록됩니다. 분야별 상실 현황과 누적 상실 수를 상시 표시하고, 10개소마다 전면
+경고를 발령합니다.
+
+### 조치와 결말
+
+조치 명령 `Q W E R T`: 광역 봉쇄 발령 · 의료 공수 투입 · 통신망 격리 ·
+대응제 개발 가속 · 계엄 선포. 지휘 역량을 소모하고 시간이 지나면 회복됩니다.
+
+**승리** — 대응제 100%를 감염률 35% 미만에서 달성하면 복구 순서가 진행되고
+콘솔이 통상 근무로 돌아옵니다. **패배** — 감염률 88%에서 본 단말 반경 1,000미터
+접촉, 방폭문 순차 돌파, 최종 데이터 보존 단계로 이어집니다. 재시작 수단은 없고,
+다시 하려면 새로고침합니다.
+
+억제만으로는 끝나지 않습니다. 대응제가 미완성인 동안 제거되지 않은 병원소가
+계속 신규 집단발생을 만들고 그 압력이 시간에 따라 커지므로, 어떤 판도 교착에
+빠지지 않고 결말에 도달합니다.
+
+밸런스는 헤드리스 하네스로 조정했습니다 — 방치 약 T+83초 패배, 산발적 조작 약
+T+120초 패배, 집중 조작 약 T+50초 승리.
+
+## 파일
 
 ```
-index.html                  page structure + access gate
-assets/css/styles.css       tokens, layout, console chrome
-assets/css/scenario.css     gate, full-screen bulletins, outbreak view
-assets/js/data.js           partner rosters + seeded mock data
-assets/js/app.js            rendering, hand-built SVG charts, filtering, telemetry
-assets/js/scenario-data.js  travel graph, traffic templates, bulletin scripts
-assets/js/scenario.js       gate, bulletin queue, contagion engine, endings
+index.html                  화면 구조 + 접속 게이트
+assets/css/styles.css       토큰, 배치, 콘솔 외형
+assets/css/scenario.css     게이트, 전면 경고, 사태 화면
+assets/js/data.js           협력기관 명부 + 시드 기반 모의 자료
+assets/js/app.js            렌더링, 직접 구성한 SVG 도표, 조건 적용, 회선 표시
+assets/js/scenario-data.js  이동 경로, 전문 문안, 경고 대본
+assets/js/scenario.js       게이트, 경고 대기열, 전파 모형, 노드 붕괴, 결말
 ```
 
-`window.WDMA_SIM` exposes the engine (`start`, `step`, `run`, `mean`) so the
-scenario can be played headlessly while tuning.
+`window.WDMA_SIM`으로 엔진(`start`, `step`, `run`, `mean`)을 노출해 두어, 밸런스
+조정 시 화면 없이 시나리오를 돌려볼 수 있습니다.
 
-## Design notes
+## 설계 메모
 
-- **Colour.** Categorical slots 1–3 (blue / orange / aqua) carry hazard-class
-  identity; the reserved four-step status palette carries message precedence and
-  never doubles as a series colour. Both modes were run through the palette
-  validator against these exact surfaces — lightness band, chroma floor, CVD
-  separation, normal-vision floor, contrast. Dark is the default surface; light is
-  separately stepped, not an automatic flip.
-- **Precedence never reads by colour alone** — every indicator ships a glyph and a
-  P1–P4 code beside the hue.
-- **Every chart has a table view.** The `TBL` toggle swaps the plot for its
-  WCAG-clean equivalent, so no value is reachable only through a tooltip.
-- **Charts are hand-built SVG** with no charting library. Mark colours are CSS
-  custom properties in inline styles, so a theme change repaints them without a
-  re-render. The ranked bar chart is drawn at its container's real pixel width so
-  labels never scale down with the viewBox.
-- Theme follows the OS setting; the toggle overrides it and persists to
-  `localStorage`.
+- **색.** 재해구분은 범주형 1~3번 슬롯(파랑·주황·청록), 전문 우선순위와 점령
+  단계는 예약된 4단계 상태 팔레트를 씁니다. 두 계열은 서로 침범하지 않습니다.
+  명암 양쪽 표면에 대해 색각 이상 분리도·명도대·채도 하한·대비를 검증기로
+  통과시켰습니다. 어둠이 기본이고 밝음은 별도로 단계를 잡은 값입니다.
+- **상태는 색만으로 읽히지 않습니다** — 우선순위와 점령 단계 모두 기호와 낱말을
+  색과 함께 답니다.
+- **모든 도표에 표 보기가 있습니다.** `표` 단추로 도표와 동등한 표로 바꿉니다.
+  따라서 어떤 값도 말풍선으로만 도달하지 않습니다.
+- **도표는 라이브러리 없이 직접 만든 SVG입니다.** 표식 색을 인라인 CSS 변수로
+  써서 테마가 바뀌어도 다시 그리지 않고 색만 갱신됩니다. 순위 막대는 컨테이너의
+  실제 픽셀 너비로 그려 축 글자가 축소되지 않습니다.
+- 한글이 없는 고정폭 서체를 고려해 두 서체 스택에 한글 대체 서체를 넣었습니다.
 
-## Status
+## 상태
 
-UI only. Next steps would be wiring the views to real feeds, replacing the mock
-data layer, and adding auth and role-based access.
+인터페이스 단계입니다. 다음 단계는 실제 자료원 연결, 모의 자료 계층 교체,
+접근 권한 처리입니다.
