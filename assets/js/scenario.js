@@ -1,8 +1,8 @@
 /* WDMA GLOBAL OPERATIONS COMMAND — access gate and exercise scenario engine.
  *
- * EXERCISE ONLY. Drives a fictional biological-outbreak drill: access gate,
- * timed escalation, a contagion model over the member states, full-screen
- * bulletins, and win/lose endings. No real system, pathogen or event.
+ * Access gate, timed escalation, a contagion model over the member states,
+ * full-screen bulletins in Korean, and both ending sequences. Fictional
+ * scenario — no real system, pathogen or event.
  */
 (function (global) {
   'use strict';
@@ -47,6 +47,11 @@
 
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
+  function setText(selector, text) {
+    var node = document.querySelector(selector);
+    if (node) node.textContent = text;
+  }
+
   function pad2(n) { return String(n).padStart(2, '0'); }
 
   function nowDtg() {
@@ -90,7 +95,7 @@
     clear(bulletinBox);
 
     var inner = el('div', { class: 'bulletin__inner' }, [
-      el('span', { class: 'bulletin__tag', text: opts.tag || 'FLASH' }),
+      el('span', { class: 'bulletin__tag', text: opts.tag || '긴급' }),
       el('h2', { class: 'bulletin__title', text: opts.title }),
       el('div', { class: 'bulletin__lines' }, (opts.lines || []).map(function (l) {
         return el('div', { text: l });
@@ -101,7 +106,7 @@
     var pct = null;
     if (opts.archive) {
       fill = el('div', { class: 'bulletin__fill' });
-      pct = el('p', { class: 'bulletin__pct', text: 'ARCHIVE WRITE 00%' });
+      pct = el('p', { class: 'bulletin__pct', text: '기록 저장 00%' });
       inner.appendChild(el('div', { class: 'bulletin__archive' }, [
         el('div', { class: 'bulletin__track' }, [fill]), pct
       ]));
@@ -109,7 +114,7 @@
 
     inner.appendChild(el('p', {
       class: 'bulletin__meta',
-      text: 'WDMA GLOBAL OPERATIONS COMMAND · ' + nowDtg() + ' · EXERCISE'
+      text: 'WDMA 전지구 작전 지휘부 · ' + nowDtg()
     }));
 
     /* The archive stage runs to completion on its own — no skipping it. */
@@ -117,14 +122,10 @@
     if (dismissable) {
       var btn = el('button', {
         class: 'bulletin__dismiss', type: 'button',
-        text: (opts.dismissLabel || 'ACKNOWLEDGE') + '  [ENTER]'
+        text: '확인  [ENTER]'
       });
       btn.addEventListener('click', close);
       inner.appendChild(btn);
-    } else if (opts.restart) {
-      var again = el('button', { class: 'bulletin__dismiss', type: 'button', text: 'RESTART EXERCISE' });
-      again.addEventListener('click', function () { global.location.reload(); });
-      inner.appendChild(again);
     }
 
     bulletinBox.appendChild(el('div', { class: 'bulletin__bar' }));
@@ -136,7 +137,7 @@
       var iv = global.setInterval(function () {
         p = Math.min(100, p + 3);
         fill.style.width = p + '%';
-        pct.textContent = 'ARCHIVE WRITE ' + pad2(p) + '%';
+        pct.textContent = '기록 저장 ' + pad2(p) + '%';
         if (p >= 100) global.clearInterval(iv);
       }, 220);
     }
@@ -205,8 +206,40 @@
   function startOutbreak() {
     document.body.classList.add('is-outbreak');
 
+    /* From here the terminal is black and stays black: the stored theme is
+       dropped and the theme control removed, so there is nothing to switch. */
+    document.documentElement.removeAttribute('data-theme');
+    try { global.localStorage.removeItem('wdma-theme'); } catch (e) { /* blocked */ }
+    var themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) themeBtn.remove();
+
+    Array.prototype.forEach.call(document.querySelectorAll('.classbar'), function (bar) {
+      clear(bar);
+      bar.appendChild(el('span', { text: '1급기밀//WDMA-COSMIC//대외비' }));
+      bar.appendChild(el('span', { class: 'classbar__x', text: '전지구 비상 — 최긴급 전문 수신 중' }));
+    });
+
+    /* The chrome that survives the takeover changes over too, so nothing on
+       screen is left in English once the outbreak is running. */
+    setText('.cmdbar__title', 'WDMA 전지구 작전 지휘부');
+    setText('.cmdbar__sub', '조정본부 · J3 상황실');
+    var labels = { OPCON: '작전태세', OPR: '운용자', TERM: '단말', DTG: '일시' };
+    Array.prototype.forEach.call(document.querySelectorAll('.cmdbar .kv__k'), function (k) {
+      if (labels[k.textContent]) k.textContent = labels[k.textContent];
+    });
+    var opcon = document.getElementById('opcon');
+    if (opcon) opcon.textContent = '최고단계';
+
+    var foot = document.querySelector('.foot');
+    if (foot) {
+      clear(foot);
+      foot.appendChild(el('span', { text: 'WDMA · 전지구 작전 지휘부' }));
+      foot.appendChild(el('span', { class: 'foot__spacer' }));
+      foot.appendChild(el('span', { text: '최긴급 전문 회선 개방' }));
+    }
+
     engine.nations = D.memberStates.map(function (m) {
-      return { code: m.code, name: m.name, node: m.node, inf: 0 };
+      return { code: m.code, name: S.nationKo[m.code] || m.name, node: m.node, inf: 0 };
     });
     engine.byCode = {};
     engine.nations.forEach(function (n) { engine.byCode[n.code] = n; });
@@ -262,9 +295,8 @@
       if (engine.t - engine.lastCluster >= 6) {
         engine.lastCluster = engine.t;
         pushSignal({
-          prec: 'FLASH', tone: 'critical', from: 'WDMA SURVEILLANCE',
-          body: 'NEW CLUSTER — ' + seed.name.toUpperCase() +
-                ' — RESERVOIR NOT ELIMINATED, COUNTER-AGENT INCOMPLETE'
+          prec: '최긴급', tone: 'critical', from: 'WDMA 감시본부',
+          body: '신규 집단발생 — ' + seed.name + ' — 병원소 미제거, 대응제 미완성'
         });
       }
       mean = meanInfection();
@@ -307,15 +339,15 @@
   }
 
   var PREC_BY_LEVEL = {
-    secure: 'ROUTINE', elevated: 'PRIORITY', contested: 'IMMEDIATE',
-    overrun: 'FLASH', dark: 'FLASH'
+    secure: '통상', elevated: '우선', contested: '긴급',
+    overrun: '최긴급', dark: '최긴급'
   };
 
   function emitSignals() {
     var pool = engine.nations.filter(function (n) { return n.inf > 0.5; });
     if (!pool.length) pool = engine.nations.slice(0, 4);
 
-    var count = 1 + (Math.random() < 0.45 ? 1 : 0);
+    var count = 2 + Math.floor(Math.random() * 3);
     for (var i = 0; i < count; i += 1) {
       var n = pool[Math.floor(Math.random() * pool.length)];
       var lv = levelOf(n.inf);
@@ -323,7 +355,7 @@
       pushSignal({
         prec: PREC_BY_LEVEL[lv.key],
         tone: lv.token,
-        from: n.node + ' · ' + n.name.toUpperCase(),
+        from: n.node + ' · ' + n.name,
         body: lines[Math.floor(Math.random() * lines.length)]
       });
     }
@@ -333,13 +365,13 @@
     var row = el('article', { class: 'sig sig--new' }, [
       el('div', { class: 'sig__hd' }, [
         el('span', { class: 'sig__prec tone-' + sig.tone, text: sig.prec }),
-        el('span', { class: 'sig__fm', text: 'FM ' + sig.from }),
+        el('span', { class: 'sig__fm', text: '발신 ' + sig.from }),
         el('span', { class: 'sig__dtg', text: nowDtg() })
       ]),
       el('p', { class: 'sig__body', text: sig.body })
     ]);
     ui.feed.appendChild(row);
-    while (ui.feed.childElementCount > 26) ui.feed.removeChild(ui.feed.firstChild);
+    while (ui.feed.childElementCount > 70) ui.feed.removeChild(ui.feed.firstChild);
     global.setTimeout(function () { row.classList.remove('sig--new'); }, 400);
   }
 
@@ -357,30 +389,30 @@
 
     if (action.id === 'cordon') {
       engine.cordonFor = 18;
-      note('CORDON ENFORCED — TRAVEL TRANSFER HALVED FOR 18 S');
+      note('광역 봉쇄 발령 — 국제 이동 통제선 설정 완료');
     } else if (action.id === 'airlift') {
       worst.slice(0, 3).forEach(function (n) { n.inf = Math.max(0, n.inf - 13); });
-      note('MEDICAL AIRLIFT INBOUND — ' + worst.slice(0, 3).map(function (n) {
+      note('의료지원단 전개 — ' + worst.slice(0, 3).map(function (n) {
         return n.code;
       }).join(' / '));
     } else if (action.id === 'isolate') {
       engine.comms = Math.min(100, engine.comms + 28);
       engine.data = Math.min(100, engine.data + 24);
-      note('NETWORKS RE-ROUTED THROUGH HARDENED MILITARY CIRCUITS');
+      note('통신망 군 전용 회선으로 우회 완료');
     } else if (action.id === 'vaccine') {
       engine.vaccine = Math.min(100, engine.vaccine + 13);
-      note('COUNTER-AGENT PROGRAM AT ' + Math.round(engine.vaccine) + '%');
+      note('대응제 개발 진척 ' + Math.round(engine.vaccine) + '%');
     } else if (action.id === 'martial') {
       engine.nations.forEach(function (n) { n.inf = Math.max(0, n.inf - 9); });
       engine.civil = Math.max(0, engine.civil - 16);
-      note('MARTIAL LAW DECLARED — CIVIL INTEGRITY DEGRADED');
+      note('계엄 선포 — 민간 기능 저하');
     }
 
     renderOutbreak();
   }
 
   function note(text) {
-    pushSignal({ prec: 'ORDER', tone: 'good', from: 'WDMA GLOBAL OPERATIONS COMMAND', body: text });
+    pushSignal({ prec: '명령', tone: 'good', from: 'WDMA 전지구 작전 지휘부', body: text });
   }
 
   /* ------------------------------------------------------------ outbreak ui -- */
@@ -393,11 +425,10 @@
     ui.clock = el('span', { class: 'kv__v', text: 'T+00:00' });
 
     host.appendChild(el('div', { class: 'ob-head' }, [
-      el('span', { class: 'ob-head__title', text: 'OPERATION — BIOLOGICAL CONTAINMENT' }),
-      el('span', { class: 'sec__note', text: 'EXERCISE · WDMA-COSMIC · CRITIC' }),
+      el('span', { class: 'ob-head__title', text: '작전 — 생물학적 봉쇄' }),
       el('div', { class: 'ob-head__meta' }, [
-        kvNode('ELAPSED', ui.clock),
-        kvNode('GLOBAL INFECTION', ui.mean)
+        kvNode('경과', ui.clock),
+        kvNode('전지구 감염률', ui.mean)
       ])
     ]));
 
@@ -405,7 +436,6 @@
     ui.feed = el('div', { class: 'feed' });
     ui.gauges = el('div');
     ui.acts = el('div', { class: 'acts' });
-    ui.end = el('div');
 
     var actions = S.actions.map(function (a) {
       var btn = el('button', { class: 'act', type: 'button' }, [
@@ -421,19 +451,12 @@
     actions.forEach(function (b) { ui.acts.appendChild(b); });
 
     host.appendChild(el('div', { class: 'ob-grid' }, [
-      panel('Global containment board', 'TS//SCI', ui.nations),
-      panel('Incoming traffic', 'TS//SCI//CRITIC', ui.feed),
-      panel('Command actions', 'TS//SCI', el('div', null, [
+      panel('전지구 점령 상황판', '1급기밀', ui.nations),
+      panel('수신 전문', '1급기밀', ui.feed),
+      panel('지휘 조치', '1급기밀', el('div', null, [
         ui.gauges,
-        el('p', { class: 'subhead', text: 'Directives' }),
-        ui.acts,
-        el('p', {
-          class: 'ob-note',
-          text: 'Press Q W E R T or click. Capacity regenerates over time. ' +
-                'The counter-agent must reach 100% while global infection is ' +
-                'held under ' + WIN_INFECTION + '%.'
-        }),
-        ui.end
+        el('p', { class: 'subhead', text: '조치 명령' }),
+        ui.acts
       ]))
     ]));
 
@@ -491,12 +514,12 @@
 
     clear(ui.gauges);
     [
-      { k: 'COMMAND CAPACITY', v: engine.capacity, tone: engine.capacity < 25 ? 'critical' : 'good' },
-      { k: 'COUNTER-AGENT PROGRAM', v: engine.vaccine, tone: 'good' },
-      { k: 'COMMS INTEGRITY', v: engine.comms, tone: gaugeTone(engine.comms) },
-      { k: 'DATA NETWORK', v: engine.data, tone: gaugeTone(engine.data) },
-      { k: 'MILITARY NETS', v: engine.mil, tone: gaugeTone(engine.mil) },
-      { k: 'CIVIL INTEGRITY', v: engine.civil, tone: gaugeTone(engine.civil) }
+      { k: '지휘 역량', v: engine.capacity, tone: engine.capacity < 25 ? 'critical' : 'good' },
+      { k: '대응제 개발', v: engine.vaccine, tone: 'good' },
+      { k: '통신 무결성', v: engine.comms, tone: gaugeTone(engine.comms) },
+      { k: '데이터망', v: engine.data, tone: gaugeTone(engine.data) },
+      { k: '군 통신망', v: engine.mil, tone: gaugeTone(engine.mil) },
+      { k: '민간 기능', v: engine.civil, tone: gaugeTone(engine.civil) }
     ].forEach(function (g) {
       ui.gauges.appendChild(el('div', { class: 'gauge' }, [
         el('div', { class: 'gauge__hd' }, [
@@ -539,32 +562,16 @@
       global.setTimeout(function () {
         showBulletin({
           kind: won ? 'good' : 'critical',
-          tag: won ? 'RECOVERY' : 'FLASH — CRITIC',
+          tag: won ? '복구' : '긴급',
           title: line.text,
           lines: [line.sub],
           archive: !!line.archive,
           hold: line.archive ? 8200 : 2400,
-          final: !!line.final,
-          restart: !!line.final && !won
+          final: !!line.final
         });
         if (line.final && won) global.setTimeout(restoreConsole, 2600);
       }, line.t);
     });
-
-    clear(ui.end);
-    ui.end.appendChild(el('div', { class: 'ob-end' + (won ? '' : ' ob-end--bad') }, [
-      el('p', {
-        class: 'ob-end__t',
-        text: won ? 'CONTAINMENT ACHIEVED' : 'GLOBAL CONTAINMENT LOST'
-      }),
-      el('p', {
-        text: won
-          ? 'Counter-agent distributed. Nations returning to national control. ' +
-            'Restoring terminal to normal watch.'
-          : 'No national command structure remains. This terminal is entering ' +
-            'final data preservation.'
-      })
-    ]));
   }
 
   function restoreConsole() {

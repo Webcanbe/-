@@ -12,40 +12,40 @@ dashboard.
 > system. **The access gate does not check, store or transmit credentials** —
 > any input is admitted.
 
-## The drill
+## The scenario
 
 The console opens on an access gate. After the operator is admitted the watch
-floor runs normally for a short while, then the exercise begins:
+floor runs normally for a short while, then the situation develops:
 
 | T+ | What happens |
 |---|---|
 | 0s | Access granted — normal watch |
-| 20s | Full-screen bulletin: biological event confirmed |
-| 30s | Outbreak view takes over — the console goes dark and the dashboard gives way to the containment board |
+| 20s | Full-screen warning: 생물학적 사건 발생 |
+| 30s | Outbreak state takes over |
 
-From there a contagion walks out of the seed nation (United States) along a
-travel graph across the twenty member states. Nations move through
-SECURE → ELEVATED → CONTESTED → OVERRUN → DARK, incoming traffic reports what
-each one is seeing, and full-screen bulletins fire as the global picture
-degrades — civilian comms, the data backbone, national command nets, partner
+**Everything from that first warning onward is in Korean, on pure black.** The
+outbreak state drops any stored theme, removes the theme control, and pins the
+surface to `#000` regardless of the OS setting — there is nothing left to
+switch. The dashboard sections are hidden and the console chrome, banners and
+footer all change over, so no English is left on screen apart from the WDMA and
+WDMA-COSMIC identifiers and the operator ID that was typed in.
+
+From there a contagion walks out of the seed nation (미국) along a travel graph
+across the twenty member states. Nations move through
+통제 → 주의 → 교전 → 붕괴 → 두절, incoming traffic reports what each one is
+seeing, and 22 full-screen warnings fire as the global picture degrades —
+민간 통신망, 국제 데이터 백본, 대한민국 국군 지휘망, 위성 통신 성좌, partner
 nodes going silent.
 
 **Directives** (`Q W E R T`, or click) spend command capacity, which regenerates
-over time:
+over time: 광역 봉쇄 발령 · 의료 공수 투입 · 통신망 격리 · 대응제 개발 가속 ·
+계엄 선포.
 
-| Key | Directive | Effect |
-|---|---|---|
-| Q | Enforce cordon | Halves travel transfer for 18 s |
-| W | Medical airlift | Pushes USAR and field hospitals into the three worst nations |
-| E | Isolate networks | Restores comms and data integrity |
-| R | Vaccine program | Advances the counter-agent — the only route home |
-| T | Martial law | Heavy global suppression, lasting cost to civil integrity |
-
-**Win** by running the counter-agent to 100% while holding global infection
-under 35% — the console then walks back up through a restoration sequence and
-returns to normal watch. **Lose** if global infection reaches 88%, and the
-terminal plays out its own end: contact at 1,000 m, blast doors going one by
-one, then the final data preservation stage.
+**승리** — run the counter-agent to 100% while holding global infection under
+35%; the console walks back up through a restoration sequence and returns to
+normal watch. **패배** — global infection reaches 88%, and the terminal plays out
+its own end: 본 단말 반경 1,000미터 접촉, blast doors one by one, then
+최종 데이터 보존 단계. There is no restart control; reload to run it again.
 
 Suppression alone will not finish it. While the counter-agent is incomplete an
 uneliminated reservoir keeps seeding fresh clusters, and that pressure grows
