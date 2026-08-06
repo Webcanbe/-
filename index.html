@@ -8,8 +8,58 @@
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230e1211'/><circle cx='8' cy='8' r='5' fill='none' stroke='%233987e5' stroke-width='1.4'/></svg>">
   <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/scenario.css">
 </head>
-<body>
+<body class="is-locked">
+
+<!-- ================================================== access gate ======== -->
+<div class="gate" id="gate">
+  <div class="gate__box">
+    <div class="gate__top">TOP SECRET//SCI//WDMA-COSMIC//NOFORN — EXERCISE</div>
+    <div class="gate__body">
+      <div class="gate__seal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3 12h18M12 3c2.6 2.6 2.6 15 0 18M12 3c-2.6 2.6-2.6 15 0 18"></path>
+        </svg>
+        <div>
+          <div class="gate__name">WDMA GLOBAL OPERATIONS COMMAND</div>
+          <div class="gate__unit">TERMINAL GOC-T04 · RESTRICTED ACCESS</div>
+        </div>
+      </div>
+
+      <p class="gate__warn">
+        EXERCISE SYSTEM. This terminal is a simulation built for interface work —
+        it is not a real system and holds no real data. Credentials are not
+        checked, stored or transmitted.
+      </p>
+
+      <form id="gate-form" autocomplete="off">
+        <div class="gate__field">
+          <label class="gate__label" for="gate-id">OPERATOR ID</label>
+          <input class="gate__input" id="gate-id" name="operator" type="text"
+                 required maxlength="24" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="gate__field">
+          <label class="gate__label" for="gate-pw">PASSCODE</label>
+          <input class="gate__input" id="gate-pw" name="passcode" type="password"
+                 maxlength="64" autocomplete="off">
+        </div>
+        <button class="gate__submit" id="gate-submit" type="submit">AUTHENTICATE</button>
+      </form>
+
+      <div class="gate__log" id="gate-log" aria-live="polite"></div>
+    </div>
+    <div class="gate__foot">
+      <span>UNAUTHORIZED USE PROHIBITED</span>
+      <span>ALL SESSIONS RECORDED</span>
+      <span>BUILD 0.3.0</span>
+    </div>
+  </div>
+</div>
+
+<div class="bulletin" id="bulletin" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
 
 <div class="classbar" role="note">
   <span>TOP SECRET//SCI//WDMA-COSMIC//NOFORN</span>
@@ -43,6 +93,14 @@
 </header>
 
 <main class="shell">
+
+  <!-- ======================================================== OUTBREAK ==== -->
+  <div id="outbreak"></div>
+
+  <div class="ob-end" id="restored" hidden>
+    <p class="ob-end__t">GLOBAL OPERATIONS COMMAND — RESTORED</p>
+    <p>Normal watch resumed. All partner nodes reporting.</p>
+  </div>
 
   <!-- ============================================================ LINK ==== -->
   <section class="link" aria-label="Secure link status">
@@ -228,7 +286,7 @@
     <span>WDMA · GLOBAL OPERATIONS COMMAND</span>
     <span class="foot__spacer"></span>
     <span>EXERCISE · SIMULATED DATA</span>
-    <span>BUILD 0.2.0</span>
+    <span>BUILD 0.3.0</span>
   </footer>
 
 </main>
@@ -240,5 +298,7 @@
 
 <script src="assets/js/data.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="assets/js/scenario-data.js"></script>
+<script src="assets/js/scenario.js"></script>
 </body>
 </html>

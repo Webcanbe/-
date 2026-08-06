@@ -4,11 +4,55 @@ Console interface for the World Disaster Management Authority coordination
 dashboard.
 
 > **EXERCISE — SIMULATED DATA — NOT FOR OPERATIONAL USE.**
-> This is a UI build. The World Disaster Management Authority is a fictional
-> organization, every record and figure is generated from a fixed seed, and the
-> classification markings are exercise props. Nothing here is connected to a live
-> feed, telemetry source or partner system, and nothing reflects any real
-> organization, event or system.
+> This is a UI build wrapped around a fictional outbreak drill. The World
+> Disaster Management Authority is a fictional organization, every record and
+> figure is generated from a fixed seed, and the classification markings are
+> exercise props. Nothing here is connected to a live feed, telemetry source or
+> partner system, and nothing reflects any real organization, event, pathogen or
+> system. **The access gate does not check, store or transmit credentials** —
+> any input is admitted.
+
+## The drill
+
+The console opens on an access gate. After the operator is admitted the watch
+floor runs normally for a short while, then the exercise begins:
+
+| T+ | What happens |
+|---|---|
+| 0s | Access granted — normal watch |
+| 20s | Full-screen bulletin: biological event confirmed |
+| 30s | Outbreak view takes over — the console goes dark and the dashboard gives way to the containment board |
+
+From there a contagion walks out of the seed nation (United States) along a
+travel graph across the twenty member states. Nations move through
+SECURE → ELEVATED → CONTESTED → OVERRUN → DARK, incoming traffic reports what
+each one is seeing, and full-screen bulletins fire as the global picture
+degrades — civilian comms, the data backbone, national command nets, partner
+nodes going silent.
+
+**Directives** (`Q W E R T`, or click) spend command capacity, which regenerates
+over time:
+
+| Key | Directive | Effect |
+|---|---|---|
+| Q | Enforce cordon | Halves travel transfer for 18 s |
+| W | Medical airlift | Pushes USAR and field hospitals into the three worst nations |
+| E | Isolate networks | Restores comms and data integrity |
+| R | Vaccine program | Advances the counter-agent — the only route home |
+| T | Martial law | Heavy global suppression, lasting cost to civil integrity |
+
+**Win** by running the counter-agent to 100% while holding global infection
+under 35% — the console then walks back up through a restoration sequence and
+returns to normal watch. **Lose** if global infection reaches 88%, and the
+terminal plays out its own end: contact at 1,000 m, blast doors going one by
+one, then the final data preservation stage.
+
+Suppression alone will not finish it. While the counter-agent is incomplete an
+uneliminated reservoir keeps seeding fresh clusters, and that pressure grows
+with elapsed time, so every run reaches a verdict.
+
+Balance was tuned against a headless harness: an idle terminal is lost around
+T+83s, inattentive play around T+113s, and focused play wins around T+50s.
 
 ## Running it
 
@@ -40,11 +84,17 @@ RTT all tick.
 ## Files
 
 ```
-index.html            page structure
-assets/css/styles.css tokens, layout, console chrome
-assets/js/data.js     partner rosters + seeded mock data
-assets/js/app.js      rendering, hand-built SVG charts, filtering, telemetry
+index.html                  page structure + access gate
+assets/css/styles.css       tokens, layout, console chrome
+assets/css/scenario.css     gate, full-screen bulletins, outbreak view
+assets/js/data.js           partner rosters + seeded mock data
+assets/js/app.js            rendering, hand-built SVG charts, filtering, telemetry
+assets/js/scenario-data.js  travel graph, traffic templates, bulletin scripts
+assets/js/scenario.js       gate, bulletin queue, contagion engine, endings
 ```
+
+`window.WDMA_SIM` exposes the engine (`start`, `step`, `run`, `mean`) so the
+scenario can be played headlessly while tuning.
 
 ## Design notes
 
