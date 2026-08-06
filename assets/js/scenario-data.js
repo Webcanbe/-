@@ -216,7 +216,7 @@
     { id: 'both', label: '한국어 + English', short: 'KR+EN' }
   ];
 
-  var ALERT_SENDER = { kr: '[중앙재난안전대책본부]', en: '[NEDCH KOREA]' };
+  var ALERT_SENDER = { kr: '중앙재난안전대책본부', en: 'NEDCH KOREA' };
 
   /* 전면 경고. 전지구 감염률이 각 문턱을 넘을 때 순서대로 발령됩니다. */
   var BULLETINS = [

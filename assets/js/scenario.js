@@ -17,11 +17,11 @@
   /* 지휘가 자동으로 돌아가므로, 반드시 이기되 사태가 눈에 보이도록 맞춥니다 —
      전파가 퍼지고 경고가 터지고 노드가 무너진 뒤에 판이 뒤집히는 곡선입니다. */
   var TICK_MS = 1000;
-  var GROWTH = 0.020;          // 국가 내 로지스틱 증가율(초당)
-  var TRANSFER = 0.0040;       // 이동 간선당 전파 비율(초당)
+  var GROWTH = 0.011;          // 국가 내 로지스틱 증가율(초당)
+  var TRANSFER = 0.0022;       // 이동 간선당 전파 비율(초당)
   var CAPACITY_REGEN = 3.0;    // 지휘 역량 회복(초당)
   var VACCINE_BITE = 0.030;    // 대응제 1점당 억제력(초당)
-  var VACCINE_STEP = 4;        // 연구단 1회 파견당 대응제 진척
+  var VACCINE_STEP = 2;        // 연구단 1회 파견당 대응제 진척
   var SEED = 'USA';
 
   var LOSS_AT = 92;            // mean infection that ends the run
@@ -29,9 +29,9 @@
   var DISPATCH_EVERY = 2;      // 자동 파견 검토 주기(초)
   var MOBILISE_AT = 12;        // 최초 파견까지의 동원 소요(초)
 
-  /* 경고가 몰려 터지지 않도록 최소 간격을 둡니다. 초반 간격은 원래 11~18초라
-     거의 그대로고, 3~4초까지 좁아지던 후반 구간만 이 값까지 벌어집니다. */
-  var MIN_WARNING_GAP = 12;
+  /* 경고 최소 간격. 12초에서 다시 3배로 벌려, 연달아 오지 않고 한 건씩
+     충분히 읽고 넘어갈 수 있게 합니다. */
+  var MIN_WARNING_GAP = 36;
 
   /* ----------------------------------------------------------- dom helper -- */
 
@@ -293,6 +293,13 @@
     wrap.appendChild(el('p', { class: 'sender__k', text: '언어' }));
     wrap.appendChild(langRow);
 
+    wrap.appendChild(el('p', { class: 'sender__k', text: '발신처 — 직접 작성' }));
+    ui.from = el('input', {
+      class: 'sender__from', type: 'text', maxlength: 40,
+      value: S.alertSender.kr, placeholder: '발신처를 입력하십시오'
+    });
+    wrap.appendChild(ui.from);
+
     wrap.appendChild(el('p', { class: 'sender__k', text: '본문 — 직접 작성' }));
     ui.body = el('textarea', {
       class: 'sender__body', rows: 3, maxlength: 200,
@@ -342,12 +349,15 @@
       totalAlerts() + '건';
   }
 
+  function senderName() {
+    var v = ui.from && ui.from.value ? ui.from.value.trim() : '';
+    return v || S.alertSender.kr;
+  }
+
   function alertText(body, lang) {
     var cls = alertClass;
-    if (lang === 'en') {
-      return S.alertSender.en + ' ' + body + ' ' + cls.enTail;
-    }
-    return S.alertSender.kr + ' ' + body + ' ' + cls.krTail;
+    return '[' + senderName() + '] ' + body + ' ' +
+      (lang === 'en' ? cls.enTail : cls.krTail);
   }
 
   function sendAlert() {
@@ -364,7 +374,7 @@
 
     var langLabel = S.alertLangs.filter(function (l) { return l.id === alertLang; })[0].short;
     engine.alerts.unshift({
-      cls: alertClass, lang: alertLang, body: body,
+      cls: alertClass, lang: alertLang, body: body, from: senderName(),
       target: targetLabel(), dtg: nowDtg()
     });
     if (engine.alerts.length > 8) engine.alerts.length = 8;
@@ -1145,7 +1155,7 @@
           el('span', { class: 'sent__cls tone-' + a.cls.token, text: a.cls.label }),
           el('span', { class: 'sent__lang', text: lang.short + ' · ' + a.target })
         ]),
-        el('p', { class: 'sent__t', text: a.body })
+        el('p', { class: 'sent__t', text: '[' + a.from + '] ' + a.body })
       ]));
     });
   }
