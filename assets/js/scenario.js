@@ -17,17 +17,21 @@
   /* 지휘가 자동으로 돌아가므로, 반드시 이기되 사태가 눈에 보이도록 맞춥니다 —
      전파가 퍼지고 경고가 터지고 노드가 무너진 뒤에 판이 뒤집히는 곡선입니다. */
   var TICK_MS = 1000;
-  var GROWTH = 0.026;          // 국가 내 로지스틱 증가율(초당)
-  var TRANSFER = 0.0050;       // 이동 간선당 전파 비율(초당)
+  var GROWTH = 0.020;          // 국가 내 로지스틱 증가율(초당)
+  var TRANSFER = 0.0040;       // 이동 간선당 전파 비율(초당)
   var CAPACITY_REGEN = 3.0;    // 지휘 역량 회복(초당)
   var VACCINE_BITE = 0.030;    // 대응제 1점당 억제력(초당)
-  var VACCINE_STEP = 6;        // 연구단 1회 파견당 대응제 진척
+  var VACCINE_STEP = 4;        // 연구단 1회 파견당 대응제 진척
   var SEED = 'USA';
 
   var LOSS_AT = 92;            // mean infection that ends the run
   var WIN_INFECTION = 50;      // mean infection allowed alongside a full program
   var DISPATCH_EVERY = 2;      // 자동 파견 검토 주기(초)
-  var MOBILISE_AT = 12;         // 최초 파견까지의 동원 소요(초)
+  var MOBILISE_AT = 12;        // 최초 파견까지의 동원 소요(초)
+
+  /* 경고가 몰려 터지지 않도록 최소 간격을 둡니다. 초반 간격은 원래 11~18초라
+     거의 그대로고, 3~4초까지 좁아지던 후반 구간만 이 값까지 벌어집니다. */
+  var MIN_WARNING_GAP = 12;
 
   /* ----------------------------------------------------------- dom helper -- */
 
@@ -425,6 +429,7 @@
     civil: 100,
     cordonFor: 0,
     lastCluster: -99,
+    lastWarningAt: -99,
     nodes: [],
     deployments: [],
     dispatchSeq: 0,
@@ -625,8 +630,9 @@
 
     /* Announce every tenth loss so the scale of the collapse is unmissable. */
     var milestone = Math.floor(engine.lostCount / 10);
-    if (milestone > engine.lostMilestone) {
+    if (milestone > engine.lostMilestone && canFireWarning()) {
       engine.lostMilestone = milestone;
+      engine.lastWarningAt = engine.t;
       var total = engine.nodes.length;
       showBulletin({
         tag: '긴급',
@@ -704,11 +710,17 @@
     return Math.max(mean, worst * 0.55, engine.lostCount * 1.6);
   }
 
+  function canFireWarning() {
+    return engine.t - engine.lastWarningAt >= MIN_WARNING_GAP;
+  }
+
   function fireBulletins(mean) {
+    if (!canFireWarning()) return;
     for (var i = 1; i < S.bulletins.length; i += 1) {
       var b = S.bulletins[i];
       if (!engine.fired[i] && mean >= b.at) {
         engine.fired[i] = true;
+        engine.lastWarningAt = engine.t;
         showBulletin({ tag: b.tag, title: b.title, lines: b.lines, en: b.en, at: b.at });
         return;
       }
@@ -1389,7 +1401,14 @@
   }
 
   /* Exposed so the scenario can be exercised headlessly during development. */
+  function tune(cfg) {
+    if (cfg.step != null) VACCINE_STEP = cfg.step;
+    if (cfg.growth != null) GROWTH = cfg.growth;
+    if (cfg.transfer != null) TRANSFER = cfg.transfer;
+  }
+
   global.WDMA_SIM = {
+    tune: tune,
     engine: engine,
     actions: S.actions,
     run: runOrder,
