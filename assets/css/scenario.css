@@ -306,7 +306,8 @@ body.is-outbreak #outbreak { display: block; }
 
 .ob-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 0.85fr);
+  grid-template-columns:
+    minmax(0, 0.9fr) minmax(0, 1.05fr) minmax(0, 1.15fr) minmax(0, 0.9fr);
   gap: 10px;
   align-items: start;
 }
@@ -486,9 +487,8 @@ body.is-outbreak #outbreak { display: block; }
 
 .restart:hover { border-color: var(--series-1); }
 
-@media (max-width: 1180px) {
+@media (max-width: 1480px) {
   .ob-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .ob-grid > :last-child { grid-column: 1 / -1; }
 }
 
 @media (max-width: 760px) {
@@ -535,3 +535,85 @@ body.is-outbreak #outbreak { display: block; }
 }
 
 .lost__relay { margin-top: 1px; color: var(--text-muted); font-size: 10px; }
+
+/* ------------------------------------------------------ 전지구 감시 레이더 -- */
+
+.radar {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+  /* 주사선이 회전하면 사각 경계 상자가 √2 배로 커집니다. 잘라내지 않으면
+     좁은 화면에서 가로로 넘칩니다. */
+  overflow: hidden;
+}
+
+/* 주사선은 원뿔 그라디언트를 돌려서 만듭니다 — 잔광이 뒤로 끌립니다. */
+.radar__sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(12, 163, 12, 0.34) 0deg,
+    rgba(12, 163, 12, 0.14) 24deg,
+    rgba(12, 163, 12, 0.03) 70deg,
+    transparent 120deg 360deg);
+  animation: radar-sweep 4s linear infinite;
+}
+
+.radar__scope { position: relative; display: block; width: 100%; height: auto; }
+
+.radar__ring { fill: none; stroke: var(--line-strong); stroke-width: 1; }
+.radar__tick { stroke: var(--line-strong); stroke-width: 1; }
+.radar__home { fill: var(--status-good); }
+
+.radar__scale,
+.radar__card {
+  font-family: var(--mono);
+  fill: var(--text-muted);
+  font-size: 8px;
+  text-anchor: middle;
+}
+
+.radar__card { font-size: 9px; fill: var(--text-secondary); }
+
+.blip { animation: blip-paint 4s linear infinite; }
+.blip__dot { stroke: #000; stroke-width: 1; }
+
+.blip__label {
+  font-family: var(--mono);
+  font-size: 8px;
+  fill: var(--text-secondary);
+}
+
+@keyframes radar-sweep { to { transform: rotate(360deg); } }
+@keyframes blip-paint {
+  0% { opacity: 1; }
+  55% { opacity: 0.55; }
+  100% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar__sweep { animation: none; opacity: 0.25; }
+  .blip { animation: none; opacity: 1; }
+}
+
+/* ------------------------------------------------------------- 파견 현황 -- */
+
+.deploys { display: flex; flex-direction: column; }
+
+.deploy {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.deploy:last-child { border-bottom: 0; }
+.deploy__hd { display: flex; gap: 8px; align-items: baseline; }
+.deploy__unit { color: var(--text-primary); font-weight: 700; }
+.deploy__state { margin-left: auto; flex: none; font-size: 10px; letter-spacing: 0.08em; }
+.deploy__dest { margin-top: 2px; color: var(--series-1); font-size: 10px; }
+.deploy__size { color: var(--text-muted); font-size: 10px; }

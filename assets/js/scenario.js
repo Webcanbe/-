@@ -14,17 +14,20 @@
   var FIRST_BULLETIN_AT = 20000;
   var OUTBREAK_AT = 30000;
 
-  /* Model constants — tuned so an idle terminal is lost in roughly a hundred
-     seconds, and an attentive one can just about hold the line. */
+  /* 지휘가 자동으로 돌아가므로, 반드시 이기되 사태가 눈에 보이도록 맞춥니다 —
+     전파가 퍼지고 경고가 터지고 노드가 무너진 뒤에 판이 뒤집히는 곡선입니다. */
   var TICK_MS = 1000;
-  var GROWTH = 0.052;          // logistic growth per second inside a nation
-  var TRANSFER = 0.011;        // share pushed down each travel edge per second
-  var CAPACITY_REGEN = 3.6;    // command capacity per second
-  var VACCINE_BITE = 0.055;    // suppression per vaccine point per second
+  var GROWTH = 0.050;          // 국가 내 로지스틱 증가율(초당)
+  var TRANSFER = 0.0100;       // 이동 간선당 전파 비율(초당)
+  var CAPACITY_REGEN = 3.4;    // 지휘 역량 회복(초당)
+  var VACCINE_BITE = 0.045;    // 대응제 1점당 억제력(초당)
+  var VACCINE_STEP = 9;        // 연구단 1회 파견당 대응제 진척
   var SEED = 'USA';
 
-  var LOSS_AT = 88;            // mean infection that ends the exercise
-  var WIN_INFECTION = 35;      // mean infection needed alongside a full program
+  var LOSS_AT = 92;            // mean infection that ends the run
+  var WIN_INFECTION = 50;      // mean infection allowed alongside a full program
+  var DISPATCH_EVERY = 2;      // 자동 파견 검토 주기(초)
+  var MOBILISE_AT = 8;         // 최초 파견까지의 동원 소요(초)
 
   /* ----------------------------------------------------------- dom helper -- */
 
@@ -42,6 +45,19 @@
     (kids || []).forEach(function (kid) {
       if (kid) node.appendChild(typeof kid === 'string' ? document.createTextNode(kid) : kid);
     });
+    return node;
+  }
+
+  /* SVG 요소 생성기. 시나리오 자료가 S 이므로 이름을 s2 로 둡니다. */
+  function s2(tag, attrs, kids) {
+    var node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        if (k === 'text') node.textContent = attrs[k];
+        else node.setAttribute(k, attrs[k]);
+      });
+    }
+    (kids || []).forEach(function (kid) { if (kid) node.appendChild(kid); });
     return node;
   }
 
@@ -186,6 +202,8 @@
     cordonFor: 0,
     lastCluster: -99,
     nodes: [],
+    deployments: [],
+    dispatchSeq: 0,
     lostCount: 0,
     lostMilestone: 0,
     cooldown: {},
@@ -242,7 +260,7 @@
     }
 
     engine.nations = D.memberStates.map(function (m) {
-      return { code: m.code, name: m.name, node: m.node, inf: 0 };
+      return { code: m.code, name: m.name, node: m.node, lat: m.lat, lon: m.lon, inf: 0 };
     });
     engine.byCode = {};
     engine.nations.forEach(function (n) { engine.byCode[n.code] = n; });
@@ -297,6 +315,7 @@
       n.inf += n.inf * GROWTH * (1 - n.inf / 100);            // logistic growth
       n.inf -= (engine.vaccine / 100) * VACCINE_BITE * 100 * 0.1;  // counter-agent
       n.inf = Math.max(0, Math.min(100, n.inf));
+      if (n.inf > 1) n.everInfected = true;
     });
 
     var mean = meanInfection();
@@ -307,8 +326,8 @@
        that neither side can end. */
     /* Held off for the opening minute so the contagion visibly walks out of
        the seed nation before the anti-stall reservoir starts biting. */
-    if (engine.t > 25 && mean < 3 && engine.vaccine < 100) {
-      var seed = engine.nations[Math.floor(Math.random() * engine.nations.length)];
+    if (engine.t > 25 && mean < 2 && engine.vaccine < 100) {
+      var seed = reseedTarget();
       /* Pressure grows with elapsed time, so stalling on the counter-agent
          loses eventually instead of grinding on forever. */
       seed.inf = Math.max(seed.inf, Math.min(46, 4 + engine.t * 0.06 + Math.random() * 3));
@@ -334,8 +353,10 @@
       if (engine.cooldown[k] > 0) engine.cooldown[k] -= 1;
     });
 
+    autoDispatch(mean);
+    ageDeployments();
     checkNodes(mean);
-    fireBulletins(mean);
+    fireBulletins(crisisIndex(mean));
     emitSignals();
     renderOutbreak();
 
@@ -384,6 +405,22 @@
 
   /* The relaying station: a still-reporting neighbour of the node's home
      nation, falling back to any nation still on the air. */
+  /* 잔존 병원소는 이미 발생했던 국가와 연결된 곳에서 다시 터집니다. 무작위로
+     고르면 미국에서 시작해 번져나간 흐름이 깨집니다. */
+  function reseedTarget() {
+    var touched = engine.nations.filter(function (n) { return n.everInfected; });
+    var pool = [];
+    touched.forEach(function (n) {
+      (S.links[n.code] || []).concat([n.code]).forEach(function (code) {
+        var t = engine.byCode[code];
+        if (t && t.inf < 88 && pool.indexOf(t) === -1) pool.push(t);
+      });
+    });
+    if (!pool.length) pool = engine.nations.filter(function (n) { return n.inf < 88; });
+    if (!pool.length) pool = engine.nations;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
   function relayFor(nd) {
     var alive = function (code) {
       var n = engine.byCode[code];
@@ -419,6 +456,16 @@
   function approach(value, target, rate) {
     if (value > target) return Math.max(target, value - rate);
     return Math.min(target, value + rate * 0.5);
+  }
+
+  /* 경고는 평균 감염률만으로는 잘 안 터집니다 — 지휘가 자동으로 억제하므로
+     평균이 낮게 유지되기 때문입니다. 최악 피해국과 상실 노드 수까지 함께 본
+     위기 지수로 발령합니다. */
+  function crisisIndex(mean) {
+    var worst = engine.nations.reduce(function (a, n) {
+      return Math.max(a, n.inf);
+    }, 0);
+    return Math.max(mean, worst * 0.55, engine.lostCount * 1.6);
   }
 
   function fireBulletins(mean) {
@@ -471,15 +518,52 @@
 
   /* --------------------------------------------------------------- actions -- */
 
-  function runAction(action) {
-    if (bulletinActive || engine.ended || !engine.running) return;
-    if (engine.capacity < action.cost) return;
-    if (engine.cooldown[action.id] > 0) return;
+  /* The command dispatches on its own — the operator watches. Priorities run
+     top down: finish the counter-agent, relieve the worst nation, hold the
+     travel routes, then repair the links. */
+  function autoDispatch(mean) {
+    if (engine.ended || !engine.running) return;
+    /* 동원에 걸리는 시간. 첫 몇 초는 사태가 자라는 것을 그대로 보여 줍니다. */
+    if (engine.t < MOBILISE_AT) return;
+    if (engine.t % DISPATCH_EVERY) return;
 
+    var worstInf = engine.nations.reduce(function (a, n) {
+      return Math.max(a, n.inf);
+    }, 0);
+
+    var wanted = [];
+    if (engine.vaccine < 100) wanted.push('vaccine');
+    if (worstInf > 25) wanted.push('airlift');
+    if (mean > 14) wanted.push('cordon');
+    if (engine.comms < 70 || engine.data < 70) wanted.push('isolate');
+    if (mean > 40) wanted.push('martial');
+
+    /* 대응제가 미완성인 동안에는 연구단 몫을 남겨 둡니다. 그러지 않으면 다른
+       파견이 역량을 다 써서 대응제가 영원히 끝나지 않습니다. */
+    var research = orderById('vaccine');
+    var reserve = engine.vaccine < 100 ? research.cost : 0;
+
+    for (var i = 0; i < wanted.length; i += 1) {
+      var order = orderById(wanted[i]);
+      if (!order) continue;
+      if (engine.cooldown[order.id] > 0) continue;
+      var floor = order.id === 'vaccine' ? 0 : reserve;
+      if (engine.capacity - order.cost < floor) continue;
+      runOrder(order);
+      return;
+    }
+  }
+
+  function orderById(id) {
+    return S.orders.filter(function (o) { return o.id === id; })[0];
+  }
+
+  function runOrder(action) {
     engine.capacity -= action.cost;
     engine.cooldown[action.id] = action.cooldown;
 
     var worst = engine.nations.slice().sort(function (a, b) { return b.inf - a.inf; });
+    dispatchUnit(action, worst[0]);
 
     if (action.id === 'cordon') {
       engine.cordonFor = 18;
@@ -494,7 +578,7 @@
       engine.data = Math.min(100, engine.data + 24);
       note('통신망 군 전용 회선으로 우회 완료');
     } else if (action.id === 'vaccine') {
-      engine.vaccine = Math.min(100, engine.vaccine + 13);
+      engine.vaccine = Math.min(100, engine.vaccine + VACCINE_STEP);
       note('대응제 개발 진척 ' + Math.round(engine.vaccine) + '%');
     } else if (action.id === 'martial') {
       engine.nations.forEach(function (n) { n.inf = Math.max(0, n.inf - 9); });
@@ -502,7 +586,42 @@
       note('계엄 선포 — 민간 기능 저하');
     }
 
-    renderOutbreak();
+  }
+
+  /* A dispatch is a unit going somewhere, and it stays on the board until it
+     rotates home, so the panel reads as a deployment list rather than a log. */
+  function dispatchUnit(action, target) {
+    var pool = S.units[action.id] || S.units.airlift;
+    var unit = pool[engine.dispatchSeq % pool.length];
+    engine.dispatchSeq += 1;
+
+    var dest = target && target.inf > 0 ? target.name : '전 권역';
+    engine.deployments.unshift({
+      seq: engine.dispatchSeq,
+      order: action.name,
+      unit: unit.name,
+      size: unit.size,
+      dest: dest,
+      state: 0,
+      since: engine.t
+    });
+    if (engine.deployments.length > 8) engine.deployments.length = 8;
+
+    pushSignal({
+      prec: '명령', tone: 'good', from: 'WDMA 대한민국 조정본부',
+      body: action.name + ' — ' + unit.name + ' ' + dest + ' 전개 · ' + unit.size
+    });
+  }
+
+  /* 전개중 → 임무중 → 복귀, then off the board. */
+  function ageDeployments() {
+    engine.deployments.forEach(function (d) {
+      var age = engine.t - d.since;
+      d.state = age < 3 ? 0 : age < 12 ? 1 : 2;
+    });
+    engine.deployments = engine.deployments.filter(function (d) {
+      return engine.t - d.since < 16;
+    });
   }
 
   function note(text) {
@@ -531,32 +650,20 @@
     ui.nations = el('div', { class: 'nations' });
     ui.feed = el('div', { class: 'feed' });
     ui.gauges = el('div');
-    ui.acts = el('div', { class: 'acts' });
+    ui.deploys = el('div', { class: 'deploys' });
+    ui.radar = buildRadar();
     ui.sectors = el('div', { class: 'rows' });
     ui.recent = el('div', { class: 'rows' });
 
-    var actions = S.actions.map(function (a) {
-      var btn = el('button', { class: 'act', type: 'button' }, [
-        el('span', { class: 'act__key', text: a.key }),
-        el('span', { text: a.name }),
-        el('span', { class: 'act__cost', text: a.cost }),
-        el('span', { class: 'act__brief', text: a.brief })
-      ]);
-      btn.addEventListener('click', function () { runAction(a); });
-      a._btn = btn;
-      return btn;
-    });
-    actions.forEach(function (b) { ui.acts.appendChild(b); });
-
     host.appendChild(el('div', { class: 'ob-grid' }, [
+      el('div', { class: 'ob-col' }, [
+        panel('전지구 감시 레이더', '1급기밀', ui.radar),
+        panel('지휘 계기', '1급기밀', ui.gauges)
+      ]),
       panel('전지구 점령 상황판', '1급기밀', ui.nations),
       panel('수신 전문', '1급기밀', ui.feed),
       el('div', { class: 'ob-col' }, [
-        panel('지휘 조치', '1급기밀', el('div', null, [
-          ui.gauges,
-          el('p', { class: 'subhead', text: '조치 명령' }),
-          ui.acts
-        ])),
+        panel('파견 현황', '1급기밀', ui.deploys),
         panel('연합 노드 현황', '1급기밀', el('div', null, [
           ui.sectors,
           el('p', { class: 'subhead', text: '최근 상실 · 전달 경로' }),
@@ -565,26 +672,9 @@
       ])
     ]));
 
-    document.addEventListener('keydown', onActionKey);
   }
 
-  function setActionsEnabled(on) {
-    S.actions.forEach(function (a) {
-      if (!a._btn) return;
-      if (!on) a._btn.disabled = true;
-      else a._btn.disabled = engine.capacity < a.cost ||
-        engine.cooldown[a.id] > 0 || !!engine.ended;
-    });
-  }
-
-  function onActionKey(ev) {
-    if (bulletinActive || engine.ended || !engine.running) return;
-    if (ev.target && /^(INPUT|SELECT|TEXTAREA)$/.test(ev.target.tagName)) return;
-    var key = ev.key.toUpperCase();
-    S.actions.forEach(function (a) {
-      if (a.key === key) { ev.preventDefault(); runAction(a); }
-    });
-  }
+  function setActionsEnabled() { /* 파견은 자동이므로 잠글 조작이 없습니다 */ }
 
   function kvNode(k, valueNode) {
     return el('span', { class: 'kv' }, [el('span', { class: 'kv__k', text: k }), valueNode]);
@@ -646,15 +736,138 @@
       ]));
     });
 
+    renderRadar();
+    renderDeployments();
     renderNodes();
 
-    S.actions.forEach(function (a) {
-      if (!a._btn) return;
-      var blocked = bulletinActive || engine.capacity < a.cost ||
-        engine.cooldown[a.id] > 0 || !!engine.ended;
-      a._btn.disabled = blocked;
-      a._btn.querySelector('.act__cost').textContent =
-        engine.cooldown[a.id] > 0 ? 'T-' + engine.cooldown[a.id] : a.cost;
+  }
+
+  /* ------------------------------------------------------------- 레이더 --- */
+
+  var RADAR = { size: 320, cx: 160, cy: 160, r: 140, maxKm: 20015 };
+  var SEOUL = { lat: 37.5665, lon: 126.978 };
+  var SWEEP_SECONDS = 4;
+
+  function toRad(d) { return (d * Math.PI) / 180; }
+
+  /* 서울 기준 대권 방위·거리 */
+  function bearingRange(lat, lon) {
+    var la1 = toRad(SEOUL.lat), la2 = toRad(lat), dLon = toRad(lon - SEOUL.lon);
+    var y = Math.sin(dLon) * Math.cos(la2);
+    var x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLon);
+    var brg = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+    var cosd = Math.sin(la1) * Math.sin(la2) +
+      Math.cos(la1) * Math.cos(la2) * Math.cos(dLon);
+    return { brg: brg, km: 6371 * Math.acos(Math.max(-1, Math.min(1, cosd))) };
+  }
+
+  function buildRadar() {
+    var wrap = el('div', { class: 'radar' });
+    wrap.appendChild(el('div', { class: 'radar__sweep' }));
+
+    var R = RADAR;
+    var svg = s2('svg', {
+      class: 'radar__scope', viewBox: '0 0 ' + R.size + ' ' + R.size,
+      role: 'img', 'aria-label': '서울 기준 전지구 감시 레이더. 정확한 수치는 점령 상황판 참조.'
+    });
+
+    [0.25, 0.5, 0.75, 1].forEach(function (f, i) {
+      svg.appendChild(s2('circle', {
+        class: 'radar__ring', cx: R.cx, cy: R.cy, r: R.r * f
+      }));
+      /* 거리는 제곱근 축척입니다. 서울 반경 1만km 안에 대부분이 몰려 있어
+         선형으로 그리면 안쪽에 뭉쳐 읽을 수 없습니다. */
+      svg.appendChild(s2('text', {
+        class: 'radar__scale', x: R.cx + 3, y: R.cy - R.r * f + 10,
+        text: Math.round((R.maxKm * f * f) / 1000) + 'k'
+      }));
+    });
+
+    for (var a = 0; a < 360; a += 30) {
+      var rad = toRad(a);
+      svg.appendChild(s2('line', {
+        class: 'radar__tick',
+        x1: R.cx + Math.sin(rad) * (R.r - 8), y1: R.cy - Math.cos(rad) * (R.r - 8),
+        x2: R.cx + Math.sin(rad) * R.r, y2: R.cy - Math.cos(rad) * R.r
+      }));
+    }
+
+    [['북', 0], ['동', 90], ['남', 180], ['서', 270]].forEach(function (m) {
+      var rad = toRad(m[1]);
+      svg.appendChild(s2('text', {
+        class: 'radar__card',
+        x: R.cx + Math.sin(rad) * (R.r - 20),
+        y: R.cy - Math.cos(rad) * (R.r - 20) + 4,
+        text: m[0]
+      }));
+    });
+
+    svg.appendChild(s2('circle', { class: 'radar__home', cx: R.cx, cy: R.cy, r: 3 }));
+    ui.blips = s2('g');
+    svg.appendChild(ui.blips);
+    wrap.appendChild(svg);
+    return wrap;
+  }
+
+  function renderRadar() {
+    if (!ui.blips) return;
+    clear(ui.blips);
+    var R = RADAR;
+
+    engine.nations.forEach(function (n) {
+      var geo = n.geo || (n.geo = bearingRange(n.lat, n.lon));
+      var rad = toRad(geo.brg);
+      var dist = Math.sqrt(Math.min(1, geo.km / R.maxKm)) * R.r;
+      var x = R.cx + Math.sin(rad) * dist;
+      var y = R.cy - Math.cos(rad) * dist;
+      var lv = levelOf(n.inf);
+
+      /* 소인은 방위에 맞춰 밝아집니다 — 주사선이 지날 때 칠해지는 것처럼. */
+      var delay = -(geo.brg / 360) * SWEEP_SECONDS;
+      var g = s2('g', {
+        class: 'blip',
+        style: 'animation-delay: ' + delay.toFixed(2) + 's'
+      });
+      g.appendChild(s2('circle', {
+        class: 'blip__dot fill-' + lv.token, cx: x, cy: y,
+        r: 3 + Math.min(4, n.inf / 22)
+      }));
+      /* 라벨은 화면 바깥쪽으로 붙입니다 — 서울 근처 국가들이 가운데에서
+         서로 겹치는 것을 줄입니다. */
+      if (n.inf >= 8) {
+        var right = x >= R.cx;
+        g.appendChild(s2('text', {
+          class: 'blip__label', x: x + (right ? 8 : -8), y: y + 3,
+          'text-anchor': right ? 'start' : 'end', text: n.code
+        }));
+      }
+      g.appendChild(s2('title', {
+        text: n.name + ' · ' + lv.label + ' ' + Math.round(n.inf) + '% · 방위 ' +
+              Math.round(geo.brg) + '° · ' + Math.round(geo.km).toLocaleString('en-US') + 'km'
+      }));
+      ui.blips.appendChild(g);
+    });
+  }
+
+  /* ------------------------------------------------------------- 파견 현황 -- */
+
+  function renderDeployments() {
+    clear(ui.deploys);
+    if (!engine.deployments.length) {
+      ui.deploys.appendChild(el('p', { class: 'empty', text: '전개 중인 부대 없음' }));
+      return;
+    }
+    engine.deployments.forEach(function (d) {
+      var label = S.deployStates[d.state];
+      var tone = d.state === 0 ? 'warning' : d.state === 1 ? 'good' : 'dark';
+      ui.deploys.appendChild(el('div', { class: 'deploy' }, [
+        el('div', { class: 'deploy__hd' }, [
+          el('span', { class: 'deploy__unit', text: d.unit }),
+          el('span', { class: 'deploy__state tone-' + tone, text: label })
+        ]),
+        el('p', { class: 'deploy__dest', text: d.order + ' · ' + d.dest }),
+        el('p', { class: 'deploy__size', text: d.size })
+      ]));
     });
   }
 
@@ -820,7 +1033,7 @@
   global.WDMA_SIM = {
     engine: engine,
     actions: S.actions,
-    run: runAction,
+    run: runOrder,
     step: step,
     mean: meanInfection,
     start: startOutbreak

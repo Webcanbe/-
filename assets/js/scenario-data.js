@@ -144,14 +144,44 @@
     { at: 84, tag: '긴급', title: '외곽 감시선 접촉 증가', lines: ['본 시설 주변 대량 반응 탐지', '경계 병력 최종 배치 완료'] }
   ];
 
-  /* 지휘 조치. 소요 지휘역량과 재발령 대기시간을 가집니다. */
-  var ACTIONS = [
-    { id: 'cordon', key: 'Q', name: '광역 봉쇄 발령', cost: 22, cooldown: 6, brief: '국제 이동 통제선 설정' },
-    { id: 'airlift', key: 'W', name: '의료 공수 투입', cost: 18, cooldown: 5, brief: '최우선 3개국 의료지원단 전개' },
-    { id: 'isolate', key: 'E', name: '통신망 격리', cost: 14, cooldown: 5, brief: '군 전용 회선으로 우회' },
-    { id: 'vaccine', key: 'R', name: '대응제 개발 가속', cost: 30, cooldown: 7, brief: '연구 자원 집중 투입' },
-    { id: 'martial', key: 'T', name: '계엄 선포', cost: 26, cooldown: 9, brief: '전 지역 강제 통제' }
+  /* 파견 명령. 지휘부가 상황에 따라 자동으로 발령합니다. */
+  var ORDERS = [
+    { id: 'vaccine', name: '연구단 증원', cost: 26, cooldown: 6, brief: '대응제 개발 자원 집중' },
+    { id: 'airlift', name: '신속대응단 파견', cost: 16, cooldown: 4, brief: '최우선 권역 의료·구조 전개' },
+    { id: 'cordon', name: '봉쇄선 설정', cost: 18, cooldown: 6, brief: '국제 이동 통제선 구축' },
+    { id: 'isolate', name: '통신중계 복구', cost: 12, cooldown: 5, brief: '군 전용 회선 우회 개통' },
+    { id: 'martial', name: '광역 통제 발령', cost: 22, cooldown: 8, brief: '전 지역 강제 통제' }
   ];
+
+  /* 파견 부대. 명령 종류별로 편성이 다릅니다. */
+  var UNITS = {
+    airlift: [
+      { name: '제7 신속대응단', size: '병력 2,400명 · 수송기 12대' },
+      { name: '제11 공정여단', size: '병력 3,100명 · 회전익 24대' },
+      { name: '제3 의무지원단', size: '야전병원 4개소 · 의료진 860명' },
+      { name: '제4 방역지원단', size: '제독차 60대 · 인원 1,200명' },
+      { name: '제9 수송비행단', size: '대형수송기 18대' }
+    ],
+    cordon: [
+      { name: '제5 공병단', size: '차단선 장비 · 인원 1,700명' },
+      { name: '제2 화생방대대', size: '제독소 8개소 · 인원 640명' },
+      { name: '해상차단 전대', size: '함정 9척' }
+    ],
+    isolate: [
+      { name: '제1 통신지원단', size: '이동중계소 22기' },
+      { name: '위성지상국 파견대', size: '이동 지상국 6기' }
+    ],
+    vaccine: [
+      { name: '통합연구단', size: '연구인력 940명 · 생산라인 5개' },
+      { name: '검체수송 편대', size: '수송기 6대' }
+    ],
+    martial: [
+      { name: '수도방위 통합기동대', size: '병력 5,200명' },
+      { name: '광역 치안기동단', size: '병력 4,400명' }
+    ]
+  };
+
+  var DEPLOY_STATES = ['전개중', '임무중', '복귀'];
 
   var DEFEAT = [
     { t: 0, text: '전지구 봉쇄 실패', sub: '잔존 국가 지휘체계 없음' },
@@ -180,7 +210,9 @@
     levels: LEVELS,
     signals: SIGNALS,
     bulletins: BULLETINS,
-    actions: ACTIONS,
+    orders: ORDERS,
+    units: UNITS,
+    deployStates: DEPLOY_STATES,
     defeat: DEFEAT,
     victory: VICTORY
   };

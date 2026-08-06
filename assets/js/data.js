@@ -94,27 +94,28 @@
     g.members.forEach(function (m, i) { m.node = g.code + '-' + pad2(i + 1); });
   });
 
+  /* 좌표는 레이더 화면에서 서울 기준 방위·거리를 계산하는 데 씁니다. */
   var MEMBER_STATES = [
-    { name: '미국', code: 'USA' },
-    { name: '중국', code: 'CHN' },
-    { name: '러시아', code: 'RUS' },
-    { name: '인도', code: 'IND' },
-    { name: '영국', code: 'GBR' },
-    { name: '프랑스', code: 'FRA' },
-    { name: '독일', code: 'DEU' },
-    { name: '일본', code: 'JPN' },
-    { name: '대한민국', code: 'KOR' },
-    { name: '이탈리아', code: 'ITA' },
-    { name: '튀르키예', code: 'TUR' },
-    { name: '캐나다', code: 'CAN' },
-    { name: '브라질', code: 'BRA' },
-    { name: '사우디아라비아', code: 'SAU' },
-    { name: '이스라엘', code: 'ISR' },
-    { name: '호주', code: 'AUS' },
-    { name: '인도네시아', code: 'IDN' },
-    { name: '이란', code: 'IRN' },
-    { name: '스페인', code: 'ESP' },
-    { name: '파키스탄', code: 'PAK' }
+    { name: '미국', code: 'USA', lat: 39.8, lon: -98.6 },
+    { name: '중국', code: 'CHN', lat: 35.9, lon: 104.2 },
+    { name: '러시아', code: 'RUS', lat: 61.5, lon: 105.3 },
+    { name: '인도', code: 'IND', lat: 20.6, lon: 79.0 },
+    { name: '영국', code: 'GBR', lat: 54.0, lon: -2.0 },
+    { name: '프랑스', code: 'FRA', lat: 46.6, lon: 2.2 },
+    { name: '독일', code: 'DEU', lat: 51.2, lon: 10.5 },
+    { name: '일본', code: 'JPN', lat: 36.2, lon: 138.3 },
+    { name: '대한민국', code: 'KOR', lat: 36.5, lon: 127.9 },
+    { name: '이탈리아', code: 'ITA', lat: 41.9, lon: 12.6 },
+    { name: '튀르키예', code: 'TUR', lat: 39.0, lon: 35.2 },
+    { name: '캐나다', code: 'CAN', lat: 56.1, lon: -106.3 },
+    { name: '브라질', code: 'BRA', lat: -14.2, lon: -51.9 },
+    { name: '사우디아라비아', code: 'SAU', lat: 23.9, lon: 45.1 },
+    { name: '이스라엘', code: 'ISR', lat: 31.0, lon: 34.9 },
+    { name: '호주', code: 'AUS', lat: -25.3, lon: 133.8 },
+    { name: '인도네시아', code: 'IDN', lat: -0.8, lon: 113.9 },
+    { name: '이란', code: 'IRN', lat: 32.4, lon: 53.7 },
+    { name: '스페인', code: 'ESP', lat: 40.5, lon: -3.7 },
+    { name: '파키스탄', code: 'PAK', lat: 30.4, lon: 69.3 }
   ];
 
   MEMBER_STATES.forEach(function (m, i) { m.node = 'MS-' + pad2(i + 1); });
