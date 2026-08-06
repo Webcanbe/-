@@ -105,6 +105,8 @@
       return;
     }
 
+    if (opts.title && !opts.archive) engine.lastWarning = opts;
+
     bulletinActive = true;
     pauseTick();
     global.WDMA_FROZEN = true;   /* app.js halts its clocks on this flag */
@@ -143,9 +145,7 @@
     var dismissable = !opts.final;
     var btn = null;
 
-    if (opts.alert) {
-      inner.appendChild(buildAlertConsole(opts, function () { close(); }));
-    } else if (dismissable) {
+    if (dismissable) {
       btn = el('button', {
         class: 'bulletin__dismiss', type: 'button',
         text: opts.archive ? '기록 저장 중' : '확인  [ENTER]'
@@ -178,7 +178,6 @@
     }
 
     function onKey(ev) {
-      if (opts.alert) return;   /* 재난문자를 보내야 넘어갑니다 */
       if (!dismissable || (btn && btn.disabled)) return;
       if (ev.key === 'Enter' || ev.key === 'Escape' || ev.key === ' ') {
         ev.preventDefault();
@@ -201,91 +200,213 @@
     return S.alertSender.kr + ' ' + bulletin.title + '. ' + cls.krTail;
   }
 
-  function buildAlertConsole(opts, done) {
-    var wrap = el('div', { class: 'alertbox' });
+  /* ------------------------------------------------------------- 재난문자 -- */
 
-    wrap.appendChild(el('p', { class: 'alertbox__k', text: '대국민 재난문자 발송' }));
-    wrap.appendChild(el('p', {
-      class: 'alertbox__reach',
-      text: '수신 대상 · 국내 5,180만 · 해외 체류 84만 · 주한 외국인 226만'
-    }));
+  var alertLang = 'kr';
+  var alertClass = S.alertClasses[2];   /* 기본 안전안내문자 */
+  var alertTargets = { KOR: true };
 
-    var langRow = el('div', { class: 'alertbox__langs' });
+  function totalAlerts() {
+    var n = 0;
+    Object.keys(engine.alertCounts).forEach(function (k) { n += engine.alertCounts[k]; });
+    return n;
+  }
+
+  function targetCodes() {
+    return Object.keys(alertTargets).filter(function (c) { return alertTargets[c]; });
+  }
+
+  function targetLabel() {
+    var codes = targetCodes();
+    if (!codes.length) return '대상 없음';
+    if (codes.length === engine.nations.length) return '전 회원국';
+    if (codes.length <= 2) {
+      return codes.map(function (c) {
+        return engine.byCode[c] ? engine.byCode[c].name : c;
+      }).join(' · ');
+    }
+    return codes.length + '개국';
+  }
+
+  function draftBody() {
+    var w = engine.lastWarning;
+    return w ? w.title : '재난 상황 발생. 안전에 유의하시기 바랍니다.';
+  }
+
+  /* 발송기. 등급·대상국·언어를 고르고 본문을 직접 써서 내보냅니다. */
+  function buildSender() {
+    var wrap = el('div', { class: 'sender' });
+
+    var classRow = el('div', { class: 'sender__row' });
+    S.alertClasses.forEach(function (c) {
+      var b = el('button', {
+        class: 'sbtn sbtn--' + c.token, type: 'button',
+        'aria-pressed': String(alertClass.id === c.id), text: c.label
+      });
+      b.addEventListener('click', function () {
+        alertClass = c;
+        Array.prototype.forEach.call(classRow.children, function (x) {
+          x.setAttribute('aria-pressed', String(x === b));
+        });
+      });
+      classRow.appendChild(b);
+    });
+    wrap.appendChild(el('p', { class: 'sender__k', text: '등급' }));
+    wrap.appendChild(classRow);
+
+    wrap.appendChild(el('p', { class: 'sender__k', text: '대상 국가' }));
+    var quick = el('div', { class: 'sender__row' });
+    [['대한민국', function () { alertTargets = { KOR: true }; }],
+     ['전 회원국', function () {
+        alertTargets = {};
+        engine.nations.forEach(function (n) { alertTargets[n.code] = true; });
+      }],
+     ['해제', function () { alertTargets = {}; }]
+    ].forEach(function (q) {
+      var b = el('button', { class: 'sbtn', type: 'button', text: q[0] });
+      b.addEventListener('click', function () { q[1](); paintTargets(); });
+      quick.appendChild(b);
+    });
+    wrap.appendChild(quick);
+
+    ui.targetGrid = el('div', { class: 'sender__targets' });
+    wrap.appendChild(ui.targetGrid);
+
+    var langRow = el('div', { class: 'sender__row' });
     S.alertLangs.forEach(function (l) {
       var b = el('button', {
-        class: 'langbtn', type: 'button',
-        'aria-pressed': String(alertLang === l.id), text: l.label
+        class: 'sbtn', type: 'button',
+        'aria-pressed': String(alertLang === l.id), text: l.short
       });
       b.addEventListener('click', function () {
         alertLang = l.id;
-        Array.prototype.forEach.call(langRow.children, function (c) {
-          c.setAttribute('aria-pressed', String(c === b));
+        Array.prototype.forEach.call(langRow.children, function (x) {
+          x.setAttribute('aria-pressed', String(x === b));
         });
-        paintPreview();
       });
       langRow.appendChild(b);
     });
+    wrap.appendChild(el('p', { class: 'sender__k', text: '언어' }));
     wrap.appendChild(langRow);
 
-    var preview = el('div', { class: 'alertbox__preview' });
-    wrap.appendChild(preview);
-
-    var classRow = el('div', { class: 'alertbox__classes' });
-    S.alertClasses.forEach(function (cls) {
-      var b = el('button', { class: 'classbtn classbtn--' + cls.token, type: 'button' }, [
-        el('span', { class: 'classbtn__t', text: cls.label }),
-        el('span', { class: 'classbtn__e', text: cls.en }),
-        el('span', { class: 'classbtn__r', text: cls.reach })
-      ]);
-      b.addEventListener('mouseenter', function () { paintPreview(cls); });
-      b.addEventListener('focus', function () { paintPreview(cls); });
-      b.addEventListener('click', function () { sendAlert(opts, cls); done(); });
-      classRow.appendChild(b);
+    wrap.appendChild(el('p', { class: 'sender__k', text: '본문 — 직접 작성' }));
+    ui.body = el('textarea', {
+      class: 'sender__body', rows: 3, maxlength: 200,
+      placeholder: '보낼 내용을 입력하십시오'
     });
-    wrap.appendChild(classRow);
+    wrap.appendChild(ui.body);
 
-    function paintPreview(cls) {
-      var use = cls || S.alertClasses[recommendedIndex(opts)];
-      clear(preview);
-      if (alertLang === 'kr' || alertLang === 'both') {
-        preview.appendChild(el('p', { class: 'alertbox__msg', text: alertBody(opts, use, 'kr') }));
-      }
-      if (alertLang === 'en' || alertLang === 'both') {
-        preview.appendChild(el('p', { class: 'alertbox__msg', text: alertBody(opts, use, 'en') }));
-      }
-    }
+    var draft = el('button', { class: 'sbtn sbtn--wide', type: 'button', text: '최근 경고 문안 넣기' });
+    draft.addEventListener('click', function () { ui.body.value = draftBody(); });
+    wrap.appendChild(draft);
 
-    paintPreview();
+    var send = el('button', { class: 'sender__send', type: 'button', text: '발 송' });
+    send.addEventListener('click', function () { sendAlert(); });
+    wrap.appendChild(send);
+
+    ui.senderNote = el('p', { class: 'sender__note' });
+    wrap.appendChild(ui.senderNote);
+
+    paintTargets();
     return wrap;
   }
 
-  /* 상황 위중도에 맞는 등급. 이보다 낮게 보내면 시민 대응도가 덜 오르고,
-     지나치게 높게만 보내면 경보 피로가 쌓입니다. */
-  function recommendedIndex(opts) {
-    var at = opts.at || 0;
-    if (at >= 40) return 0;
-    if (at >= 14) return 1;
-    return 2;
+  function paintTargets() {
+    if (!ui.targetGrid) return;
+    clear(ui.targetGrid);
+    engine.nations.slice().sort(function (a, b) {
+      return a.code < b.code ? -1 : 1;
+    }).forEach(function (n) {
+      var on = !!alertTargets[n.code];
+      var b = el('button', {
+        class: 'tchip', type: 'button', 'aria-pressed': String(on),
+        title: n.name, text: n.code
+      });
+      b.addEventListener('click', function () {
+        alertTargets[n.code] = !alertTargets[n.code];
+        b.setAttribute('aria-pressed', String(!!alertTargets[n.code]));
+        renderSenderNote();
+      });
+      ui.targetGrid.appendChild(b);
+    });
+    renderSenderNote();
   }
 
-  function sendAlert(opts, cls) {
-    var want = S.alertClasses[recommendedIndex(opts)];
-    var gap = cls.rank - want.rank;
-    var delta = gap === 0 ? 9 : gap > 0 ? (gap > 1 ? -4 : 4) : -6;
-    engine.compliance = Math.max(0, Math.min(100, engine.compliance + delta));
+  function renderSenderNote() {
+    if (!ui.senderNote) return;
+    ui.senderNote.textContent = '대상 ' + targetLabel() + ' · 누적 발송 ' +
+      totalAlerts() + '건';
+  }
 
-    engine.alertCounts[cls.id] = (engine.alertCounts[cls.id] || 0) + 1;
+  function alertText(body, lang) {
+    var cls = alertClass;
+    if (lang === 'en') {
+      return S.alertSender.en + ' ' + body + ' ' + cls.enTail;
+    }
+    return S.alertSender.kr + ' ' + body + ' ' + cls.krTail;
+  }
+
+  function sendAlert() {
+    var body = (ui.body.value || '').trim() || draftBody();
+    var codes = targetCodes();
+    if (!codes.length) {
+      ui.senderNote.textContent = '대상 국가를 하나 이상 선택하십시오.';
+      return;
+    }
+
+    engine.alertCounts[alertClass.id] = (engine.alertCounts[alertClass.id] || 0) + 1;
+    /* 점수 영향은 아주 소소하게만 둡니다 — 내용과 등급은 채점하지 않습니다. */
+    engine.compliance = Math.min(100, engine.compliance + 1);
+
+    var langLabel = S.alertLangs.filter(function (l) { return l.id === alertLang; })[0].short;
     engine.alerts.unshift({
-      cls: cls, lang: alertLang, title: opts.title, dtg: nowDtg()
+      cls: alertClass, lang: alertLang, body: body,
+      target: targetLabel(), dtg: nowDtg()
     });
     if (engine.alerts.length > 8) engine.alerts.length = 8;
 
-    var langLabel = S.alertLangs.filter(function (l) { return l.id === alertLang; })[0].short;
     pushSignal({
-      prec: '발송', tone: cls.token, from: 'WDMA 대한민국 조정본부 · 재난문자',
-      body: cls.label + ' 발송 (' + langLabel + ') — ' + opts.title
+      prec: '발송', tone: alertClass.token,
+      from: 'WDMA 대한민국 조정본부 · 재난문자',
+      body: alertClass.label + ' 발송 (' + langLabel + ') — ' + targetLabel() + ' — ' + body
     });
+
+    /* 보낸 문자는 이 단말에도 수신됩니다. */
+    if (alertLang === 'kr' || alertLang === 'both') showSms(alertText(body, 'kr'));
+    if (alertLang === 'en' || alertLang === 'both') showSms(alertText(body, 'en'));
+
+    ui.body.value = '';
     renderOutbreak();
+  }
+
+  /* 수신 문자 알림. 실제 휴대전화로 오는 모양을 흉내냅니다. */
+  function showSms(text) {
+    var tray = document.getElementById('smstray');
+    if (!tray) return;
+    engine.smsSeq += 1;
+
+    var d = new Date();
+    var stamp = d.getFullYear() + '.' + pad2(d.getMonth() + 1) + '.' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+
+    var card = el('div', { class: 'sms sms--' + alertClass.token, role: 'status' }, [
+      el('div', { class: 'sms__hd' }, [
+        el('span', { class: 'sms__cls', text: alertClass.label }),
+        el('span', { class: 'sms__time', text: stamp })
+      ]),
+      el('p', { class: 'sms__body', text: text }),
+      el('p', { class: 'sms__foot', text: '수신 · 이 단말' })
+    ]);
+    tray.appendChild(card);
+
+    global.setTimeout(function () {
+      card.classList.add('sms--out');
+      global.setTimeout(function () {
+        if (card.parentNode) card.parentNode.removeChild(card);
+      }, 400);
+    }, 9000);
+
+    while (tray.childElementCount > 4) tray.removeChild(tray.firstChild);
   }
 
   /* ---------------------------------------------------------------- engine -- */
@@ -308,6 +429,8 @@
     deployments: [],
     dispatchSeq: 0,
     alerts: [],
+    lastWarning: null,
+    smsSeq: 0,
     alertCounts: {},
     compliance: 62,
     lostCount: 0,
@@ -419,7 +542,7 @@
 
     /* 시민 대응도가 확산 속도를 좌우합니다 — 상황에 맞는 등급으로 재난문자를
        보내면 오르고, 과소·과대 발령이 이어지면 떨어집니다. */
-    var civicFactor = 1.25 - engine.compliance / 200;
+    var civicFactor = 1.03 - engine.compliance / 1600;
 
     engine.nations.forEach(function (n) {
       n.inf += n.inf * GROWTH * civicFactor * (1 - n.inf / 100);   // 로지스틱 증가
@@ -471,7 +594,10 @@
     renderOutbreak();
 
     if (mean >= LOSS_AT) { finish(false); return; }
-    if (engine.vaccine >= 100 && mean < WIN_INFECTION) { finish(true); }
+    /* 대응제가 끝나면 판정합니다. 재난문자를 한 건도 내보내지 않았으면
+       국민에게 알리지 않은 것이므로 실패로 봅니다. 내용과 등급은 따지지
+       않습니다 — 보냈는지만 봅니다. */
+    if (engine.vaccine >= 100 && mean < WIN_INFECTION) { finish(totalAlerts() >= 1); }
   }
 
   /* A coalition node falls when its home nation passes its threshold; nodes
@@ -583,7 +709,7 @@
       var b = S.bulletins[i];
       if (!engine.fired[i] && mean >= b.at) {
         engine.fired[i] = true;
-        showBulletin({ tag: b.tag, title: b.title, lines: b.lines, en: b.en, at: b.at, alert: true });
+        showBulletin({ tag: b.tag, title: b.title, lines: b.lines, en: b.en, at: b.at });
         return;
       }
     }
@@ -784,7 +910,6 @@
     ui.feed = el('div', { class: 'feed' });
     ui.gauges = el('div');
     ui.deploys = el('div', { class: 'deploys' });
-    ui.alertCounts = el('div', { class: 'rows' });
     ui.alertLog = el('div', { class: 'rows' });
     ui.radar = buildRadar();
     ui.sectors = el('div', { class: 'rows' });
@@ -798,9 +923,9 @@
       panel('전지구 점령 상황판', '1급기밀', ui.nations),
       panel('수신 전문', '1급기밀', ui.feed),
       el('div', { class: 'ob-col' }, [
-        panel('재난문자 발송', '2급기밀', el('div', null, [
-          ui.alertCounts,
-          el('p', { class: 'subhead', text: '최근 발송' }),
+        panel('재난문자 발송기', '2급기밀', el('div', null, [
+          buildSender(),
+          el('p', { class: 'subhead', text: '발송 이력' }),
           ui.alertLog
         ])),
         panel('파견 현황', '1급기밀', ui.deploys),
@@ -994,22 +1119,7 @@
   /* ---------------------------------------------------------- 재난문자 현황 -- */
 
   function renderAlerts() {
-    clear(ui.alertCounts);
-    var total = 0;
-    S.alertClasses.forEach(function (c) { total += engine.alertCounts[c.id] || 0; });
-
-    S.alertClasses.forEach(function (c) {
-      var n = engine.alertCounts[c.id] || 0;
-      ui.alertCounts.appendChild(el('div', { class: 'row' }, [
-        el('span', { class: 'row__glyph tone-' + c.token, text: '■', 'aria-hidden': 'true' }),
-        el('span', { class: 'row__label', text: c.label }),
-        el('span', { class: 'row__n', text: num(n) })
-      ]));
-    });
-    ui.alertCounts.appendChild(el('div', { class: 'row' }, [
-      el('span', { class: 'row__label', text: '누적 발송' }),
-      el('span', { class: 'row__n', text: num(total) + '건' })
-    ]));
+    renderSenderNote();
 
     clear(ui.alertLog);
     if (!engine.alerts.length) {
@@ -1021,9 +1131,9 @@
       ui.alertLog.appendChild(el('div', { class: 'sent' }, [
         el('div', { class: 'sent__hd' }, [
           el('span', { class: 'sent__cls tone-' + a.cls.token, text: a.cls.label }),
-          el('span', { class: 'sent__lang', text: lang.short })
+          el('span', { class: 'sent__lang', text: lang.short + ' · ' + a.target })
         ]),
-        el('p', { class: 'sent__t', text: a.title })
+        el('p', { class: 'sent__t', text: a.body })
       ]));
     });
   }
@@ -1259,7 +1369,7 @@
     global.setTimeout(function () {
       var b = S.bulletins[0];
       engine.fired[0] = true;
-      showBulletin({ tag: b.tag, title: b.title, lines: b.lines, en: b.en, at: b.at, alert: true });
+      showBulletin({ tag: b.tag, title: b.title, lines: b.lines, en: b.en, at: b.at });
     }, FIRST_BULLETIN_AT);
 
     global.setTimeout(startOutbreak, OUTBREAK_AT);
