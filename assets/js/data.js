@@ -1,188 +1,166 @@
-/* WDMA GLOBAL OPERATIONS COMMAND — data layer.
+/* WDMA 대한민국 조정본부 — 자료 계층.
  *
- * EXERCISE. Every record, figure and status indicator below is generated from a
- * fixed seed for interface work. No live feed, telemetry or partner system is
- * connected, and nothing here reflects any real organization or event.
+ * 인터페이스 개발용 모의 자료입니다. 고정 시드로 생성되며, 실재하는 보고체계·
+ * 사건·능력을 반영하지 않습니다.
  */
 (function (global) {
   'use strict';
 
-  /* Fixed reference instant so date-time groups stay stable across reloads. */
   var REF = Date.UTC(2026, 7, 6, 10, 0, 0);
 
   function pad2(n) { return String(n).padStart(2, '0'); }
 
-  /* Military date-time group: DDHHMMZ */
+  /* 일시부호 DDHHMMZ */
   function dtg(hoursAgo) {
     var d = new Date(REF - hoursAgo * 3600000);
     return pad2(d.getUTCDate()) + pad2(d.getUTCHours()) + pad2(d.getUTCMinutes()) + 'Z';
   }
 
   /* --------------------------------------------------------------------------
-   * Coalition partners
+   * 협력 국가 및 기관
+   *
+   * state 는 해당 기관이 소재한 회원국 부호입니다. 회원국 목록에 없는 소재지의
+   * 기관은 null 로 두고, 특정 국가에 귀속시키지 않은 채 전지구 지표로 다룹니다.
    * ----------------------------------------------------------------------- */
 
   var PARTNER_GROUPS = [
     {
-      id: 'def',
-      code: 'DEF',
-      title: 'Defense & Armed Forces',
-      role: 'Airlift · engineering · rapid deployment',
-      access: 'TS//SCI',
-      marking: 'TS//SCI',
+      id: 'def', code: 'DEF', short: '국방', title: '국방·군',
+      role: '공수 · 공병 · 신속대응', marking: '1급기밀',
       members: [
-        { name: 'United States Department of Defense', tag: 'USA' },
-        { name: 'People’s Liberation Army', tag: 'CHN' },
-        { name: 'Russian Armed Forces', tag: 'RUS' },
-        { name: 'Indian Armed Forces', tag: 'IND' },
-        { name: 'British Armed Forces', tag: 'GBR' },
-        { name: 'French Armed Forces', tag: 'FRA' },
-        { name: 'Japan Self-Defense Forces', tag: 'JPN' },
-        { name: 'Republic of Korea Armed Forces', tag: 'KOR' },
-        { name: 'Turkish Armed Forces', tag: 'TUR' },
-        { name: 'Israel Defense Forces', tag: 'ISR' }
+        { name: '미국 국방부', tag: '미국', state: 'USA' },
+        { name: '중국 인민해방군', tag: '중국', state: 'CHN' },
+        { name: '러시아 연방군', tag: '러시아', state: 'RUS' },
+        { name: '인도군', tag: '인도', state: 'IND' },
+        { name: '영국군', tag: '영국', state: 'GBR' },
+        { name: '프랑스군', tag: '프랑스', state: 'FRA' },
+        { name: '일본 자위대', tag: '일본', state: 'JPN' },
+        { name: '대한민국 국군', tag: '대한민국', state: 'KOR' },
+        { name: '튀르키예군', tag: '튀르키예', state: 'TUR' },
+        { name: '이스라엘군', tag: '이스라엘', state: 'ISR' }
       ]
     },
     {
-      id: 'fin',
-      code: 'FIN',
-      title: 'Finance & Monetary',
-      role: 'Relief funding · liquidity · reconstruction capital',
-      access: 'S//REL',
-      marking: 'S//REL',
+      id: 'fin', code: 'FIN', short: '금융', title: '금융·통화',
+      role: '구호 재원 · 유동성 · 복구 자본', marking: '2급기밀',
       members: [
-        { name: 'Federal Reserve System', tag: 'USA' },
-        { name: 'European Central Bank', tag: 'EUR' },
-        { name: 'People’s Bank of China', tag: 'CHN' },
-        { name: 'International Monetary Fund', tag: 'MULTI' },
-        { name: 'Bank for International Settlements', tag: 'MULTI' },
-        { name: 'World Bank Group', tag: 'MULTI' },
-        { name: 'BlackRock', tag: 'ASSET' },
-        { name: 'Vanguard Group', tag: 'ASSET' },
-        { name: 'JPMorgan Chase', tag: 'BANK' },
-        { name: 'Industrial and Commercial Bank of China', tag: 'BANK' }
+        { name: '연방준비제도', tag: '미국', state: 'USA' },
+        { name: '유럽중앙은행', tag: '유로존', state: null },
+        { name: '중국인민은행', tag: '중국', state: 'CHN' },
+        { name: '국제통화기금', tag: '다자', state: null },
+        { name: '국제결제은행', tag: '다자', state: null },
+        { name: '세계은행그룹', tag: '다자', state: null },
+        { name: '블랙록', tag: '자산운용', state: 'USA' },
+        { name: '뱅가드그룹', tag: '자산운용', state: 'USA' },
+        { name: 'JP모건체이스', tag: '은행', state: 'USA' },
+        { name: '중국공상은행', tag: '은행', state: 'CHN' }
       ]
     },
     {
-      id: 'med',
-      code: 'MED',
-      title: 'Health & Medical',
-      role: 'Surveillance · field hospitals · clinical surge',
-      access: 'S//REL',
-      marking: 'S//REL',
+      id: 'med', code: 'MED', short: '보건', title: '보건·의료',
+      role: '감시 · 야전병원 · 임상 확장', marking: '2급기밀',
       members: [
-        { name: 'World Health Organization', tag: 'MULTI' },
-        { name: 'National Institutes of Health', tag: 'USA' },
-        { name: 'European Medicines Agency', tag: 'EUR' },
-        { name: 'Centers for Disease Control and Prevention', tag: 'USA' },
-        { name: 'Massachusetts General Hospital', tag: 'USA' },
-        { name: 'Mayo Clinic', tag: 'USA' },
-        { name: 'UT Southwestern Medical Center', tag: 'USA' },
-        { name: 'Brigham and Women’s Hospital', tag: 'USA' },
-        { name: 'West China Hospital', tag: 'CHN' },
-        { name: 'Mount Sinai Health System', tag: 'USA' }
+        { name: '세계보건기구', tag: '다자', state: null },
+        { name: '미국 국립보건원', tag: '미국', state: 'USA' },
+        { name: '유럽의약품청', tag: '유럽연합', state: null },
+        { name: '미국 질병통제예방센터', tag: '미국', state: 'USA' },
+        { name: '매사추세츠 종합병원', tag: '미국', state: 'USA' },
+        { name: '메이요 클리닉', tag: '미국', state: 'USA' },
+        { name: 'UT 사우스웨스턴 메디컬센터', tag: '미국', state: 'USA' },
+        { name: '브리검 여성병원', tag: '미국', state: 'USA' },
+        { name: '화시병원', tag: '중국', state: 'CHN' },
+        { name: '마운트시나이 의료원', tag: '미국', state: 'USA' }
       ]
     },
     {
-      id: 'ind',
-      code: 'IND',
-      title: 'Industry & Materials',
-      role: 'Critical supply chain · components · raw materials',
-      access: 'C//REL',
-      marking: 'C//REL',
+      id: 'ind', code: 'IND', short: '산업', title: '산업·소재',
+      role: '핵심 공급망 · 부품 · 원자재', marking: '3급기밀',
       members: [
-        { name: 'Taiwan Semiconductor Manufacturing Company', tag: 'TWN' },
-        { name: 'ASML Holding', tag: 'NLD' },
-        { name: 'Samsung Electronics', tag: 'KOR' },
-        { name: 'SK hynix', tag: 'KOR' },
-        { name: 'Applied Materials', tag: 'USA' },
-        { name: 'Tokyo Electron', tag: 'JPN' },
-        { name: 'Shin-Etsu Chemical', tag: 'JPN' },
-        { name: 'Contemporary Amperex Technology', tag: 'CHN' },
-        { name: 'BASF', tag: 'DEU' },
-        { name: 'Rio Tinto', tag: 'AUS' }
+        { name: 'TSMC', tag: '반도체', state: null },
+        { name: 'ASML', tag: '노광장비', state: null },
+        { name: '삼성전자', tag: '대한민국', state: 'KOR' },
+        { name: 'SK하이닉스', tag: '대한민국', state: 'KOR' },
+        { name: '어플라이드 머티어리얼즈', tag: '미국', state: 'USA' },
+        { name: '도쿄일렉트론', tag: '일본', state: 'JPN' },
+        { name: '신에쓰화학', tag: '일본', state: 'JPN' },
+        { name: 'CATL', tag: '중국', state: 'CHN' },
+        { name: 'BASF', tag: '독일', state: 'DEU' },
+        { name: '리오틴토', tag: '호주', state: 'AUS' }
       ]
     }
   ];
 
   PARTNER_GROUPS.forEach(function (g) {
-    g.members.forEach(function (m, i) {
-      m.node = g.code + '-' + pad2(i + 1);
-    });
+    g.members.forEach(function (m, i) { m.node = g.code + '-' + pad2(i + 1); });
   });
 
   var MEMBER_STATES = [
-    { name: 'United States', code: 'USA' },
-    { name: 'China', code: 'CHN' },
-    { name: 'Russia', code: 'RUS' },
-    { name: 'India', code: 'IND' },
-    { name: 'United Kingdom', code: 'GBR' },
-    { name: 'France', code: 'FRA' },
-    { name: 'Germany', code: 'DEU' },
-    { name: 'Japan', code: 'JPN' },
-    { name: 'South Korea', code: 'KOR' },
-    { name: 'Italy', code: 'ITA' },
-    { name: 'Türkiye', code: 'TUR' },
-    { name: 'Canada', code: 'CAN' },
-    { name: 'Brazil', code: 'BRA' },
-    { name: 'Saudi Arabia', code: 'SAU' },
-    { name: 'Israel', code: 'ISR' },
-    { name: 'Australia', code: 'AUS' },
-    { name: 'Indonesia', code: 'IDN' },
-    { name: 'Iran', code: 'IRN' },
-    { name: 'Spain', code: 'ESP' },
-    { name: 'Pakistan', code: 'PAK' }
+    { name: '미국', code: 'USA' },
+    { name: '중국', code: 'CHN' },
+    { name: '러시아', code: 'RUS' },
+    { name: '인도', code: 'IND' },
+    { name: '영국', code: 'GBR' },
+    { name: '프랑스', code: 'FRA' },
+    { name: '독일', code: 'DEU' },
+    { name: '일본', code: 'JPN' },
+    { name: '대한민국', code: 'KOR' },
+    { name: '이탈리아', code: 'ITA' },
+    { name: '튀르키예', code: 'TUR' },
+    { name: '캐나다', code: 'CAN' },
+    { name: '브라질', code: 'BRA' },
+    { name: '사우디아라비아', code: 'SAU' },
+    { name: '이스라엘', code: 'ISR' },
+    { name: '호주', code: 'AUS' },
+    { name: '인도네시아', code: 'IDN' },
+    { name: '이란', code: 'IRN' },
+    { name: '스페인', code: 'ESP' },
+    { name: '파키스탄', code: 'PAK' }
   ];
 
   MEMBER_STATES.forEach(function (m, i) { m.node = 'MS-' + pad2(i + 1); });
 
   /* --------------------------------------------------------------------------
-   * Dimensions
+   * 구분
    * ----------------------------------------------------------------------- */
 
   var REGIONS = [
-    'Asia & Pacific',
-    'Africa',
-    'Southern Asia',
-    'Latin America & Caribbean',
-    'Europe',
-    'Middle East & North Africa',
-    'North America'
+    '아시아·태평양', '아프리카', '남아시아', '중남미·카리브',
+    '유럽', '중동·북아프리카', '북미'
   ];
 
   var AO_CODE = {
-    'Asia & Pacific': 'AO-PAC',
-    'Africa': 'AO-AFR',
-    'Southern Asia': 'AO-SAS',
-    'Latin America & Caribbean': 'AO-LAC',
-    'Europe': 'AO-EUR',
-    'Middle East & North Africa': 'AO-MNA',
-    'North America': 'AO-NAM'
+    '아시아·태평양': 'AO-PAC',
+    '아프리카': 'AO-AFR',
+    '남아시아': 'AO-SAS',
+    '중남미·카리브': 'AO-LAC',
+    '유럽': 'AO-EUR',
+    '중동·북아프리카': 'AO-MNA',
+    '북미': 'AO-NAM'
   };
 
-  /* Categorical slots 1-3, in fixed order. */
+  /* 범주형 1~3번 슬롯 */
   var HAZARDS = [
-    { key: 'hydro', label: 'Hydrometeorological', short: 'HYDMET', slot: 1 },
-    { key: 'geo', label: 'Geophysical', short: 'GEOPHY', slot: 2 },
-    { key: 'bio', label: 'Biological & Health', short: 'BIOMED', slot: 3 }
+    { key: 'hydro', label: '수문기상', short: '수문기상', slot: 1 },
+    { key: 'geo', label: '지구물리', short: '지구물리', slot: 2 },
+    { key: 'bio', label: '생물·보건', short: '생물보건', slot: 3 }
   ];
 
-  /* Precedence is a state, so it wears the reserved status palette and always
-     ships with a glyph and a label so it never reads by colour alone. */
+  /* 전문 우선순위는 상태값이므로 예약된 상태 팔레트를 쓰고, 색만으로 읽히지
+     않도록 기호와 낱말을 항상 함께 답니다. */
   var SEVERITIES = [
-    { key: 'critical', tier: 'P1', label: 'FLASH', token: 'critical', glyph: '▲' },
-    { key: 'serious', tier: 'P2', label: 'IMMEDIATE', token: 'serious', glyph: '◆' },
-    { key: 'elevated', tier: 'P3', label: 'PRIORITY', token: 'warning', glyph: '●' },
-    { key: 'monitoring', tier: 'P4', label: 'ROUTINE', token: 'good', glyph: '■' }
+    { key: 'critical', tier: 'P1', label: '최긴급', token: 'critical', glyph: '▲' },
+    { key: 'serious', tier: 'P2', label: '긴급', token: 'serious', glyph: '◆' },
+    { key: 'elevated', tier: 'P3', label: '우선', token: 'warning', glyph: '●' },
+    { key: 'monitoring', tier: 'P4', label: '통상', token: 'good', glyph: '■' }
   ];
 
   var MONTHS = [
-    'Sep 2025', 'Oct 2025', 'Nov 2025', 'Dec 2025', 'Jan 2026', 'Feb 2026',
-    'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Aug 2026'
+    '2025.09', '2025.10', '2025.11', '2025.12', '2026.01', '2026.02',
+    '2026.03', '2026.04', '2026.05', '2026.06', '2026.07', '2026.08'
   ];
 
   /* --------------------------------------------------------------------------
-   * Deterministic generator
+   * 결정론적 생성기 — 새로고침해도 수치가 흔들리지 않도록
    * ----------------------------------------------------------------------- */
 
   function mulberry32(seed) {
@@ -199,7 +177,7 @@
 
   function pick(list) { return list[Math.floor(rand() * list.length)]; }
 
-  /* Monthly reporting volume: monthly[region][hazardKey] = 12 values ---------- */
+  /* 월별 보고 건수: monthly[권역][재해구분] = 12개월 */
 
   var REGION_WEIGHT = [26, 21, 17, 14, 11, 10, 7];
   var HAZARD_WEIGHT = { hydro: 1.0, geo: 0.58, bio: 0.34 };
@@ -217,59 +195,58 @@
     });
   });
 
-  /* Tasking log --------------------------------------------------------------- */
+  /* 임무 기록 */
 
   var EVENT_NAMES = {
-    hydro: ['Tropical Cyclone', 'Riverine Flood', 'Flash Flood', 'Storm Surge',
-      'Drought Emergency', 'Wildfire Complex', 'Extreme Heat Event', 'Debris Flow'],
-    geo: ['Earthquake', 'Volcanic Eruption', 'Tsunami Advisory', 'Aftershock Sequence',
-      'Ground Subsidence', 'Slope Failure'],
-    bio: ['Respiratory Cluster', 'Cholera Cluster', 'Vector-Borne Surge',
-      'Food-Borne Outbreak', 'Zoonotic Spillover']
+    hydro: ['태풍', '하천 범람', '돌발 홍수', '폭풍 해일', '가뭄 비상',
+      '대형 산불', '극심 폭염', '토석류'],
+    geo: ['지진', '화산 분화', '지진해일 경보', '여진 발생', '지반 침하', '사면 붕괴'],
+    bio: ['호흡기 집단감염', '콜레라 집단발생', '매개체 감염 급증',
+      '식중독 집단발생', '인수공통 전파']
   };
 
   var PLACES = {
-    'Asia & Pacific': ['Luzon Basin', 'Kyushu Coast', 'Java Interior', 'Mekong Delta',
-      'Sulawesi Strait', 'Queensland North', 'Hokkaido Rim', 'Bohai Rim'],
-    'Africa': ['Sahel Corridor', 'Horn of Africa', 'Lake Chad Basin', 'Zambezi Valley',
-      'Rift Highlands', 'Niger Delta', 'Kalahari Fringe'],
-    'Southern Asia': ['Indus Plain', 'Ganges Delta', 'Hindu Kush', 'Deccan Plateau',
-      'Brahmaputra Basin', 'Sindh Lowlands'],
-    'Latin America & Caribbean': ['Andean Cordillera', 'Amazon Basin', 'Leeward Islands',
-      'Yucatán Shelf', 'Río de la Plata', 'Pacific Isthmus'],
-    'Europe': ['Po Valley', 'Rhine Corridor', 'Aegean Arc', 'Iberian Meseta',
-      'Carpathian Belt', 'North Sea Coast'],
-    'Middle East & North Africa': ['Anatolian Fault', 'Levant Corridor', 'Gulf Littoral',
-      'Nile Delta', 'Maghreb Coast', 'Zagros Belt'],
-    'North America': ['Cascadia Margin', 'Gulf Coast', 'Great Plains', 'Sierra Front',
-      'St. Lawrence Basin', 'Sonoran Corridor']
+    '아시아·태평양': ['루손 분지', '규슈 연안', '자바 내륙', '메콩 삼각주',
+      '술라웨시 해협', '퀸즐랜드 북부', '홋카이도 연안', '보하이 연안'],
+    '아프리카': ['사헬 회랑', '아프리카의 뿔', '차드호 유역', '잠베지 계곡',
+      '리프트 고원', '니제르 삼각주', '칼라하리 외곽'],
+    '남아시아': ['인더스 평원', '갠지스 삼각주', '힌두쿠시', '데칸 고원',
+      '브라마푸트라 유역', '신드 저지'],
+    '중남미·카리브': ['안데스 산맥', '아마존 유역', '리워드 제도',
+      '유카탄 대륙붕', '라플라타 강', '태평양 지협'],
+    '유럽': ['포 계곡', '라인 회랑', '에게해 호상', '이베리아 고원',
+      '카르파티아 산맥', '북해 연안'],
+    '중동·북아프리카': ['아나톨리아 단층', '레반트 회랑', '걸프 연안',
+      '나일 삼각주', '마그레브 연안', '자그로스 산맥'],
+    '북미': ['캐스캐디아 연변', '멕시코만 연안', '대평원', '시에라 전면',
+      '세인트로렌스 유역', '소노란 회랑']
   };
 
-  var CALL_A = ['IRON', 'PALE', 'SILENT', 'BROKEN', 'NORTHERN', 'CRIMSON', 'GRANITE',
-    'HOLLOW', 'STEEL', 'AMBER', 'SABLE', 'RAPID', 'LONE', 'DEEP', 'COLD', 'GOLDEN',
-    'QUIET', 'DISTANT', 'OPEN', 'HIGH'];
-  var CALL_B = ['MERIDIAN', 'HORIZON', 'LANTERN', 'ANVIL', 'SENTINEL', 'HARBOR',
-    'CASCADE', 'VECTOR', 'BASTION', 'TALON', 'COMPASS', 'RAMPART', 'EMBER',
-    'THRESHOLD', 'MARINER', 'PALISADE', 'KEYSTONE', 'WARDEN', 'TEMPEST', 'CITADEL'];
+  var CALL_A = ['강철', '창백', '침묵', '파쇄', '북방', '진홍', '화강', '공허',
+    '백야', '호박', '흑담', '신속', '고독', '심연', '한랭', '황금',
+    '정적', '원거리', '개방', '고공'];
+  var CALL_B = ['자오선', '지평', '등불', '모루', '파수', '항구', '폭포', '벡터',
+    '보루', '발톱', '나침반', '성벽', '잔불', '문턱', '항해자', '방책',
+    '종석', '수호자', '폭풍', '성채'];
 
   var LEAD_PARTNERS = [
-    { name: 'United States Department of Defense', node: 'DEF-01' },
-    { name: 'People’s Liberation Army', node: 'DEF-02' },
-    { name: 'Russian Armed Forces', node: 'DEF-03' },
-    { name: 'Indian Armed Forces', node: 'DEF-04' },
-    { name: 'British Armed Forces', node: 'DEF-05' },
-    { name: 'French Armed Forces', node: 'DEF-06' },
-    { name: 'Japan Self-Defense Forces', node: 'DEF-07' },
-    { name: 'Republic of Korea Armed Forces', node: 'DEF-08' },
-    { name: 'Turkish Armed Forces', node: 'DEF-09' },
-    { name: 'Israel Defense Forces', node: 'DEF-10' },
-    { name: 'World Bank Group', node: 'FIN-06' },
-    { name: 'International Monetary Fund', node: 'FIN-04' },
-    { name: 'World Health Organization', node: 'MED-01' },
-    { name: 'Centers for Disease Control and Prevention', node: 'MED-04' }
+    { name: '미국 국방부', node: 'DEF-01' },
+    { name: '중국 인민해방군', node: 'DEF-02' },
+    { name: '러시아 연방군', node: 'DEF-03' },
+    { name: '인도군', node: 'DEF-04' },
+    { name: '영국군', node: 'DEF-05' },
+    { name: '프랑스군', node: 'DEF-06' },
+    { name: '일본 자위대', node: 'DEF-07' },
+    { name: '대한민국 국군', node: 'DEF-08' },
+    { name: '튀르키예군', node: 'DEF-09' },
+    { name: '이스라엘군', node: 'DEF-10' },
+    { name: '세계은행그룹', node: 'FIN-06' },
+    { name: '국제통화기금', node: 'FIN-04' },
+    { name: '세계보건기구', node: 'MED-01' },
+    { name: '미국 질병통제예방센터', node: 'MED-04' }
   ];
 
-  var PHASES = ['EXECUTE', 'DEPLOY', 'ASSESS', 'SUSTAIN', 'RECOVER'];
+  var PHASES = ['시행', '전개', '평가', '유지', '복구'];
 
   var SEVERITY_MIX = ['critical', 'serious', 'serious', 'elevated', 'elevated',
     'elevated', 'monitoring', 'monitoring', 'monitoring', 'monitoring'];
@@ -286,9 +263,8 @@
       String(Math.floor(rand() * 10000)).padStart(4, '0');
   }
 
-  /* Spread taskings across 30-day periods on a gently declining curve — older
-     operations close out — so period-over-period movement reads as caseload
-     rather than sampling noise. */
+  /* 임무를 30일 구간에 완만한 감소 곡선으로 배분해, 구간 대비 증감이 표본
+     잡음이 아니라 처리량으로 읽히게 합니다. */
   var TASK_COUNT = 320;
   var AGE_BUCKETS = (function () {
     var periods = 11, weights = [], total = 0, out = [], b, k;
@@ -331,8 +307,7 @@
       activationH: Math.round((actBand[0] + rand() * (actBand[1] - actBand[0])) * 10) / 10,
       lead: lead.name,
       leadNode: lead.node,
-      phase: severity === 'monitoring' ? pick(['ASSESS', 'RECOVER', 'SUSTAIN'])
-        : pick(PHASES),
+      phase: severity === 'monitoring' ? pick(['평가', '복구', '유지']) : pick(PHASES),
       ageDays: ageDays,
       updatedHours: updatedHours,
       lastRpt: dtg(updatedHours)
@@ -347,26 +322,26 @@
     return b.affected - a.affected;
   });
 
-  /* Force readiness ----------------------------------------------------------- */
+  /* 전력 대비태세 */
 
   var CAPACITY = [
-    { code: 'USAR', label: 'Urban search & rescue', committed: 412, total: 560, unit: 'TM' },
-    { code: 'MEDF', label: 'Field hospital / surge beds', committed: 268, total: 430, unit: 'UNT' },
-    { code: 'ALFT', label: 'Strategic airlift', committed: 1180, total: 1340, unit: 'SOR/WK' },
-    { code: 'STOK', label: 'Emergency stockpile', committed: 46, total: 100, unit: '% RSV' },
-    { code: 'COMM', label: 'Satellite & comms relay', committed: 74, total: 128, unit: 'RLY' }
+    { code: 'USAR', label: '도시탐색구조대', committed: 412, total: 560, unit: '개 팀' },
+    { code: 'MEDF', label: '야전병원·확장병상', committed: 268, total: 430, unit: '개소' },
+    { code: 'ALFT', label: '전략공수', committed: 1180, total: 1340, unit: '소티/주' },
+    { code: 'STOK', label: '비상비축 소진율', committed: 46, total: 100, unit: '% 예비' },
+    { code: 'COMM', label: '위성·통신중계', committed: 74, total: 128, unit: '개 중계' }
   ];
 
   var POSTURE = [
-    { code: 'LNO', label: 'Liaison cells staffed', value: '40 / 40' },
-    { code: 'RPT', label: 'Member states reporting', value: '20 / 20' },
-    { code: 'ALA', label: 'Standing airlift agreements', value: '14' },
-    { code: 'PPS', label: 'Pre-positioned stockpile sites', value: '62' },
-    { code: 'CFF', label: 'Contingency funding facilities', value: '9' },
-    { code: 'EXR', label: 'Joint exercises this quarter', value: '7' }
+    { code: 'LNO', label: '연락반 배치', value: '40 / 40' },
+    { code: 'RPT', label: '회원국 보고', value: '20 / 20' },
+    { code: 'ALA', label: '상시 공수협정', value: '14' },
+    { code: 'PPS', label: '사전배치 비축기지', value: '62' },
+    { code: 'CFF', label: '우발재원 창구', value: '9' },
+    { code: 'EXR', label: '분기 합동훈련', value: '7' }
   ];
 
-  /* Link telemetry (static baseline; the UI jitters RTT for the live read) ----- */
+  /* 회선 상태 기준값 (왕복지연은 화면에서 미세 변동) */
 
   var LINK = {
     channel: 'SATCOM-3 / TACSAT-KU',
@@ -376,9 +351,9 @@
     fingerprint: '8F:2C:A1:6D:04:B7:E9:53',
     rttBase: 42,
     rekeySeconds: 8 * 60 + 41,
-    tempest: 'ZONE 1',
-    terminal: 'GOC-T04',
-    operator: 'WDMA/J3-WATCH-04'
+    tempest: '1등급 구역',
+    terminal: 'KOR-S04',
+    operator: 'WDMA-KOR/J3-당직-04'
   };
 
   global.WDMA_DATA = {

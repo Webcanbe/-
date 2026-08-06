@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WDMA — GLOBAL OPERATIONS COMMAND</title>
-  <meta name="description" content="World Disaster Management Authority global operations command console — exercise interface prototype, simulated data.">
+  <title>WDMA 대한민국 조정본부</title>
+  <meta name="description" content="WDMA 대한민국 조정본부 콘솔 — 인터페이스 시제, 모의 자료.">
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230e1211'/><circle cx='8' cy='8' r='5' fill='none' stroke='%233987e5' stroke-width='1.4'/></svg>">
   <link rel="stylesheet" href="assets/css/styles.css">
@@ -15,7 +15,7 @@
 <!-- ================================================== access gate ======== -->
 <div class="gate" id="gate">
   <div class="gate__box">
-    <div class="gate__top">TOP SECRET//SCI//WDMA-COSMIC//NOFORN — EXERCISE</div>
+    <div class="gate__top">1급기밀//WDMA-COSMIC//대외비</div>
     <div class="gate__body">
       <div class="gate__seal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -24,37 +24,37 @@
           <path d="M3 12h18M12 3c2.6 2.6 2.6 15 0 18M12 3c-2.6 2.6-2.6 15 0 18"></path>
         </svg>
         <div>
-          <div class="gate__name">WDMA GLOBAL OPERATIONS COMMAND</div>
-          <div class="gate__unit">TERMINAL GOC-T04 · RESTRICTED ACCESS</div>
+          <div class="gate__name">WDMA 대한민국 조정본부</div>
+          <div class="gate__unit">단말 KOR-S04 · 접근 제한</div>
         </div>
       </div>
 
       <p class="gate__warn">
-        EXERCISE SYSTEM. This terminal is a simulation built for interface work —
-        it is not a real system and holds no real data. Credentials are not
-        checked, stored or transmitted.
+        모의 단말입니다. 인터페이스 개발용으로 만든 시제이며 실제 체계가 아니고
+        실제 자료를 보유하지 않습니다. 입력한 자격증명은 검사·저장·전송되지
+        않습니다.
       </p>
 
       <form id="gate-form" autocomplete="off">
         <div class="gate__field">
-          <label class="gate__label" for="gate-id">OPERATOR ID</label>
+          <label class="gate__label" for="gate-id">운용자 번호</label>
           <input class="gate__input" id="gate-id" name="operator" type="text"
                  required maxlength="24" spellcheck="false" autocomplete="off">
         </div>
         <div class="gate__field">
-          <label class="gate__label" for="gate-pw">PASSCODE</label>
+          <label class="gate__label" for="gate-pw">암호</label>
           <input class="gate__input" id="gate-pw" name="passcode" type="password"
                  maxlength="64" autocomplete="off">
         </div>
-        <button class="gate__submit" id="gate-submit" type="submit">AUTHENTICATE</button>
+        <button class="gate__submit" id="gate-submit" type="submit">인증</button>
       </form>
 
       <div class="gate__log" id="gate-log" aria-live="polite"></div>
     </div>
     <div class="gate__foot">
-      <span>UNAUTHORIZED USE PROHIBITED</span>
-      <span>ALL SESSIONS RECORDED</span>
-      <span>BUILD 0.4.0</span>
+      <span>무단 사용 금지</span>
+      <span>전 접속 기록됨</span>
+      <span>빌드 0.5.0</span>
     </div>
   </div>
 </div>
@@ -62,8 +62,8 @@
 <div class="bulletin" id="bulletin" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
 
 <div class="classbar" role="note">
-  <span>TOP SECRET//SCI//WDMA-COSMIC//NOFORN</span>
-  <span class="classbar__x">EXERCISE — SIMULATED DATA — NOT FOR OPERATIONAL USE</span>
+  <span>1급기밀//WDMA-COSMIC//대외비</span>
+  <span class="classbar__x">모의 자료 — 실제 운용 금지</span>
 </div>
 
 <header class="cmdbar">
@@ -76,18 +76,18 @@
       </svg>
     </span>
     <div class="cmdbar__id">
-      <div class="cmdbar__title">WDMA GLOBAL OPERATIONS COMMAND</div>
-      <div class="cmdbar__sub">DIRECTORATE OF COORDINATION · J3 WATCH FLOOR</div>
+      <div class="cmdbar__title">WDMA 대한민국 조정본부</div>
+      <div class="cmdbar__sub">국가재난지휘본부 · 서울 상황실</div>
     </div>
 
     <span class="cmdbar__spacer"></span>
 
     <div class="cmdbar__meta">
-      <span class="kv"><span class="kv__k">OPCON</span><span class="kv__v" id="opcon">LEVEL 2</span></span>
-      <span class="kv"><span class="kv__k">OPR</span><span class="kv__v" id="opr">—</span></span>
-      <span class="kv"><span class="kv__k">TERM</span><span class="kv__v" id="term">—</span></span>
-      <span class="kv"><span class="kv__k">DTG</span><span class="kv__v" id="dtg">—</span></span>
-      <button class="btn" type="button" id="theme-toggle">LIGHT</button>
+      <span class="kv"><span class="kv__k">작전태세</span><span class="kv__v" id="opcon">2단계</span></span>
+      <span class="kv"><span class="kv__k">운용자</span><span class="kv__v" id="opr">—</span></span>
+      <span class="kv"><span class="kv__k">단말</span><span class="kv__v" id="term">—</span></span>
+      <span class="kv"><span class="kv__k">일시</span><span class="kv__v" id="dtg">—</span></span>
+      <button class="btn" type="button" id="theme-toggle">밝게</button>
     </div>
   </div>
 </header>
@@ -98,46 +98,46 @@
   <div id="outbreak"></div>
 
   <div class="ob-end" id="restored" hidden>
-    <p class="ob-end__t">전지구 작전 지휘부 복구</p>
-    <p>통상 근무로 복귀. 전 파트너 노드 보고 재개.</p>
+    <p class="ob-end__t">대한민국 조정본부 복구</p>
+    <p>통상 근무로 복귀. 전 연합 노드 보고 재개.</p>
   </div>
 
   <!-- ============================================================ LINK ==== -->
-  <section class="link" aria-label="Secure link status">
+  <section class="link" aria-label="보안 회선 상태">
     <div class="link__cell">
-      <span class="link__k">LINK STATE</span>
-      <span class="led led--good" id="link-state"><span class="led__t">ESTABLISHED</span></span>
+      <span class="link__k">회선 상태</span>
+      <span class="led led--good" id="link-state"><span class="led__t">연결됨</span></span>
     </div>
     <div class="link__cell">
-      <span class="link__k">CHANNEL</span>
+      <span class="link__k">채널</span>
       <span class="link__v" id="link-channel">—</span>
     </div>
     <div class="link__cell">
-      <span class="link__k">CIPHER SUITE</span>
+      <span class="link__k">암호 방식</span>
       <span class="link__v" id="link-cipher">—</span>
     </div>
     <div class="link__cell link__cell--grow">
-      <span class="link__k">PEER KEY FINGERPRINT</span>
+      <span class="link__k">상대 키 지문</span>
       <span class="link__v" id="link-fp">—</span>
     </div>
     <div class="link__cell">
-      <span class="link__k">RTT</span>
+      <span class="link__k">왕복지연</span>
       <span class="link__v" id="link-rtt">—</span>
     </div>
     <div class="link__cell">
-      <span class="link__k">FRAME ERR</span>
+      <span class="link__k">프레임 오류</span>
       <span class="link__v" id="link-err">—</span>
     </div>
     <div class="link__cell">
-      <span class="link__k">COMSEC KEYMAT</span>
+      <span class="link__k">암호자재</span>
       <span class="led led--good"><span class="led__t" id="link-keymat">—</span></span>
     </div>
     <div class="link__cell">
-      <span class="link__k">SESSION</span>
+      <span class="link__k">접속 시간</span>
       <span class="link__v" id="link-session">—</span>
     </div>
     <div class="link__cell">
-      <span class="link__k">TEMPEST</span>
+      <span class="link__k">템페스트</span>
       <span class="link__v" id="link-tempest">—</span>
     </div>
   </section>
@@ -146,7 +146,7 @@
   <section class="sec" aria-labelledby="s1">
     <div class="sec__head">
       <span class="sec__no">01</span>
-      <h1 class="sec__title" id="s1">Partner Countries &amp; Institutions</h1>
+      <h1 class="sec__title" id="s1">협력 국가 및 기관</h1>
       <span class="sec__note" id="partner-note"></span>
     </div>
 
@@ -154,8 +154,8 @@
 
     <section class="panel" style="margin-top: 10px;" aria-labelledby="s1b">
       <div class="panel__head">
-        <h3 class="panel__title" id="s1b">Member States</h3>
-        <span class="panel__mark">TS//REL TO WDMA</span>
+        <h3 class="panel__title" id="s1b">회원국</h3>
+        <span class="panel__mark">1급기밀</span>
       </div>
       <div class="panel__body panel__body--flush">
         <div class="states" id="states"></div>
@@ -167,28 +167,28 @@
   <section class="sec" aria-labelledby="s2">
     <div class="sec__head">
       <span class="sec__no">02</span>
-      <h2 class="sec__title" id="s2">Operational Picture</h2>
+      <h2 class="sec__title" id="s2">작전 현황</h2>
       <span class="sec__note" id="filter-summary"></span>
     </div>
 
-    <div class="filters" role="group" aria-label="Scope filters">
+    <div class="filters" role="group" aria-label="범위 조건">
       <div class="field">
-        <label class="field__label" for="f-region">AREA OF OPERATIONS</label>
+        <label class="field__label" for="f-region">작전지역</label>
         <select id="f-region"></select>
       </div>
       <div class="field">
-        <label class="field__label" for="f-hazard">HAZARD CLASS</label>
+        <label class="field__label" for="f-hazard">재해구분</label>
         <select id="f-hazard"></select>
       </div>
       <div class="field">
-        <label class="field__label" for="f-severity">PRECEDENCE</label>
+        <label class="field__label" for="f-severity">우선순위</label>
         <select id="f-severity"></select>
       </div>
       <div class="field">
-        <label class="field__label" for="f-window">REPORTING WINDOW</label>
+        <label class="field__label" for="f-window">보고 기간</label>
         <select id="f-window"></select>
       </div>
-      <button class="btn filters__reset" type="button" id="f-reset">RESET</button>
+      <button class="btn filters__reset" type="button" id="f-reset">초기화</button>
     </div>
 
     <div class="readouts" id="readouts"></div>
@@ -196,12 +196,12 @@
     <div class="grid-a">
       <figure class="panel" id="fig-volume">
         <div class="panel__head">
-          <figcaption class="panel__title">Reported events by hazard class</figcaption>
-          <span class="panel__mark">S//REL</span>
+          <figcaption class="panel__title">재해구분별 보고 건수</figcaption>
+          <span class="panel__mark">2급기밀</span>
           <button class="toggle" type="button" data-toggle="fig-volume"
                   aria-pressed="false">TBL</button>
         </div>
-        <p class="panel__sub">Events per month · scoped by AO and hazard class</p>
+        <p class="panel__sub">월간 보고 건수 · 작전지역 및 재해구분 적용</p>
         <div class="panel__body">
           <div class="plot" data-plot></div>
           <div class="legend" data-legend></div>
@@ -211,12 +211,12 @@
 
       <figure class="panel" id="fig-region">
         <div class="panel__head">
-          <figcaption class="panel__title">Tasking by AO</figcaption>
-          <span class="panel__mark">S//REL</span>
+          <figcaption class="panel__title">작전지역별 임무</figcaption>
+          <span class="panel__mark">2급기밀</span>
           <button class="toggle" type="button" data-toggle="fig-region"
                   aria-pressed="false">TBL</button>
         </div>
-        <p class="panel__sub">Active taskings, ranked</p>
+        <p class="panel__sub">진행 임무, 내림차순</p>
         <div class="panel__body">
           <div class="plot" data-plot></div>
         </div>
@@ -225,16 +225,16 @@
 
       <figure class="panel" id="fig-prec">
         <div class="panel__head">
-          <figcaption class="panel__title">Precedence mix</figcaption>
-          <span class="panel__mark">S//REL</span>
+          <figcaption class="panel__title">우선순위 구성</figcaption>
+          <span class="panel__mark">2급기밀</span>
           <button class="toggle" type="button" data-toggle="fig-prec"
                   aria-pressed="false">TBL</button>
         </div>
-        <p class="panel__sub">Share of active taskings by message precedence</p>
+        <p class="panel__sub">전문 우선순위별 진행 임무 비중</p>
         <div class="panel__body">
           <div class="plot" data-plot></div>
           <div class="rows" data-legend></div>
-          <p class="subhead">Operational phase</p>
+          <p class="subhead">작전 단계</p>
           <div class="rows" id="phase-rows"></div>
         </div>
         <div class="panel__body panel__body--flush" data-table hidden></div>
@@ -243,8 +243,8 @@
 
     <section class="panel" style="margin-top: 10px;" aria-labelledby="s2b">
       <div class="panel__head">
-        <h3 class="panel__title" id="s2b">Active Tasking</h3>
-        <span class="panel__mark">TS//SCI//NOFORN</span>
+        <h3 class="panel__title" id="s2b">진행 임무</h3>
+        <span class="panel__mark">1급기밀</span>
         <span class="sec__note" id="tasking-count"></span>
       </div>
       <div class="tbl-wrap" id="tasking"></div>
@@ -255,15 +255,15 @@
   <section class="sec" aria-labelledby="s3">
     <div class="sec__head">
       <span class="sec__no">03</span>
-      <h2 class="sec__title" id="s3">Force Readiness</h2>
-      <span class="sec__note">GLOBAL STANDING CAPACITY · NOT SCOPED BY FILTERS</span>
+      <h2 class="sec__title" id="s3">전력 대비태세</h2>
+      <span class="sec__note">전지구 상비 능력 · 위 조건 미적용</span>
     </div>
 
     <div class="grid-b">
       <section class="panel" aria-labelledby="s3a">
         <div class="panel__head">
-          <h3 class="panel__title" id="s3a">Committed vs available</h3>
-          <span class="panel__mark">S//REL</span>
+          <h3 class="panel__title" id="s3a">투입 대비 가용</h3>
+          <span class="panel__mark">2급기밀</span>
         </div>
         <div class="panel__body">
           <div class="meters" id="meters"></div>
@@ -272,8 +272,8 @@
 
       <section class="panel" aria-labelledby="s3b">
         <div class="panel__head">
-          <h3 class="panel__title" id="s3b">Command posture</h3>
-          <span class="panel__mark">S//REL</span>
+          <h3 class="panel__title" id="s3b">지휘 태세</h3>
+          <span class="panel__mark">2급기밀</span>
         </div>
         <div class="panel__body">
           <div class="rows" id="posture"></div>
@@ -283,17 +283,17 @@
   </section>
 
   <footer class="foot">
-    <span>WDMA · GLOBAL OPERATIONS COMMAND</span>
+    <span>WDMA · 대한민국 조정본부</span>
     <span class="foot__spacer"></span>
-    <span>EXERCISE · SIMULATED DATA</span>
-    <span>BUILD 0.4.0</span>
+    <span>모의 자료</span>
+    <span>빌드 0.5.0</span>
   </footer>
 
 </main>
 
 <div class="classbar classbar--foot" role="note">
-  <span>TOP SECRET//SCI//WDMA-COSMIC//NOFORN</span>
-  <span class="classbar__x">EXERCISE — SIMULATED DATA — NOT FOR OPERATIONAL USE</span>
+  <span>1급기밀//WDMA-COSMIC//대외비</span>
+  <span class="classbar__x">모의 자료 — 실제 운용 금지</span>
 </div>
 
 <script src="assets/js/data.js"></script>

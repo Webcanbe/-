@@ -1,4 +1,4 @@
-/* WDMA GLOBAL OPERATIONS COMMAND — console UI.
+/* WDMA 대한민국 조정본부 — 콘솔 UI.
  *
  * Charts are hand-built SVG so the console stays dependency-free and runs from
  * disk. Mark colours are written as CSS custom properties in inline styles, so a
@@ -63,11 +63,17 @@
 
   function trimZero(str) { return str.replace(/\.0$/, ''); }
 
+  /* 억·만 단위로 끊어 읽습니다. 억 단위에서 소수 한 자리로 뭉개면 만 단위가
+     통째로 사라지므로, 억과 만을 함께 표기합니다. */
   function compact(n) {
-    if (n >= 1e9) return trimZero((n / 1e9).toFixed(1)) + 'B';
-    if (n >= 1e6) return trimZero((n / 1e6).toFixed(1)) + 'M';
-    if (n >= 1e4) return trimZero((n / 1e3).toFixed(1)) + 'K';
-    return num(Math.round(n));
+    n = Math.round(n);
+    if (n >= 1e8) {
+      var eok = Math.floor(n / 1e8);
+      var man = Math.floor((n % 1e8) / 1e4);
+      return man ? eok + '억 ' + num(man) + '만' : eok + '억';
+    }
+    if (n >= 1e4) return trimZero((n / 1e4).toFixed(1)) + '만';
+    return num(n);
   }
 
   function plural(n, one, many) { return num(n) + ' ' + (n === 1 ? one : many); }
@@ -75,7 +81,7 @@
   function pad2(n) { return String(n).padStart(2, '0'); }
 
   function hoursMins(v) {
-    return Math.floor(v) + 'H' + pad2(Math.round((v - Math.floor(v)) * 60)) + 'M';
+    return Math.floor(v) + '시간 ' + pad2(Math.round((v - Math.floor(v)) * 60)) + '분';
   }
 
   function median(list) {
@@ -128,7 +134,7 @@
         h('p', { class: 'panel__sub', text: g.role }),
         h('div', { class: 'panel__body panel__body--flush' }, [
           h('table', { class: 'proster' }, [
-            h('caption', { class: 'vh', text: g.title + ' partner roster' }),
+            h('caption', { class: 'vh', text: g.title + ' 협력기관 명부' }),
             body
           ])
         ])
@@ -147,8 +153,8 @@
 
     var orgs = D.partnerGroups.reduce(function (a, g) { return a + g.members.length; }, 0);
     document.getElementById('partner-note').textContent =
-      orgs + ' ORGANIZATIONS · ' + D.partnerGroups.length + ' SECTORS · ' +
-      D.memberStates.length + ' MEMBER STATES';
+      '기관 ' + orgs + '개 · ' + D.partnerGroups.length + '개 분야 · 회원국 ' +
+      D.memberStates.length + '개국';
   }
 
   /* -------------------------------------------------------------- filters -- */
@@ -160,19 +166,19 @@
   }
 
   function buildFilters() {
-    fillSelect('f-region', [{ v: 'all', t: 'ALL AO' }].concat(
+    fillSelect('f-region', [{ v: 'all', t: '전 작전지역' }].concat(
       D.regions.map(function (r) { return { v: r, t: D.aoCode[r] + ' · ' + r }; })));
 
-    fillSelect('f-hazard', [{ v: 'all', t: 'ALL CLASSES' }].concat(
+    fillSelect('f-hazard', [{ v: 'all', t: '전 재해구분' }].concat(
       D.hazards.map(function (x) { return { v: x.key, t: x.short + ' · ' + x.label }; })));
 
-    fillSelect('f-severity', [{ v: 'all', t: 'ALL PRECEDENCE' }].concat(
+    fillSelect('f-severity', [{ v: 'all', t: '전 우선순위' }].concat(
       D.severities.map(function (x) { return { v: x.key, t: x.tier + ' · ' + x.label }; })));
 
     fillSelect('f-window', [
-      { v: '90', t: 'LAST 90 DAYS' },
-      { v: '180', t: 'LAST 180 DAYS' },
-      { v: '365', t: 'LAST 12 MONTHS' }
+      { v: '90', t: '최근 90일' },
+      { v: '180', t: '최근 180일' },
+      { v: '365', t: '최근 12개월' }
     ]);
     document.getElementById('f-window').value = String(state.windowDays);
 
@@ -238,38 +244,38 @@
     var flash = rows.filter(function (r) { return r.severity === 'critical'; }).length;
 
     host.appendChild(h('article', { class: 'panel ro ro--hero' }, [
-      h('p', { class: 'ro__k', text: 'POPULATION UNDER ACTIVE ADVISORY' }),
+      h('p', { class: 'ro__k', text: '경보 구역 내 인구' }),
       h('p', { class: 'ro__v', text: compact(sum(rows, 'affected')) }),
-      h('p', { class: 'ro__d', text: 'INSIDE AN ACTIVE ADVISORY PERIMETER' }),
+      h('p', { class: 'ro__d', text: '유효 경보 구역 내부' }),
       h('div', { class: 'ro__foot' }, [
-        kv('P1 FLASH', num(flash)),
-        kv('TASKINGS', num(rows.length)),
-        kv('AO ACTIVE', num(Object.keys(aos).length)),
-        kv('WINDOW', state.windowDays + 'D')
+        kv('P1 최긴급', num(flash)),
+        kv('임무', num(rows.length)),
+        kv('활성 작전지역', num(Object.keys(aos).length)),
+        kv('기간', state.windowDays + '일')
       ])
     ]));
 
     [
       {
-        k: 'ACTIVE TASKINGS',
+        k: '진행 임무',
         v: num(rows.length),
         spark: bucket(rows, periods),
         d: delta(now.length, prior.length, 'up-is-bad')
       },
       {
-        k: 'PARTNER ASSETS COMMITTED',
+        k: '투입 협력 자산',
         v: num(sum(rows, 'assets')),
         spark: bucket(rows, periods, 'assets'),
         d: delta(sum(now, 'assets'), sum(prior, 'assets'), 'up-is-good')
       },
       {
-        k: 'RELIEF FUNDING ALLOCATED',
-        v: '$' + trimZero((sum(rows, 'fundingM') / 1000).toFixed(1)) + 'B',
+        k: '배정 구호 재원',
+        v: trimZero((sum(rows, 'fundingM') / 1000).toFixed(1)) + '조 원',
         spark: bucket(rows, periods, 'fundingM'),
         d: delta(sum(now, 'fundingM'), sum(prior, 'fundingM'), 'up-is-good')
       },
       {
-        k: 'MEDIAN ACTIVATION',
+        k: '중위 가동시간',
         v: hoursMins(median(rows.map(function (r) { return r.activationH; }))),
         spark: bucket(rows, periods, 'median'),
         d: delta(
@@ -283,8 +289,8 @@
         h('p', { class: 'ro__k', text: t.k }),
         h('p', { class: 'ro__v', text: t.v }),
         t.d
-          ? h('p', { class: 'ro__d ' + t.d.cls }, [h('b', { text: t.d.text }), ' VS PRIOR 30D'])
-          : h('p', { class: 'ro__d', text: 'NO PRIOR PERIOD' }),
+          ? h('p', { class: 'ro__d ' + t.d.cls }, [h('b', { text: t.d.text }), ' 직전 30일 대비'])
+          : h('p', { class: 'ro__d', text: '직전 구간 없음' }),
         h('div', { class: 'ro__spark' }, [spark(t.spark)])
       ]));
     });
@@ -301,7 +307,7 @@
     if (!before) return null;
     var diff = now - before;
     var pct = Math.round((diff / before) * 100);
-    if (!pct) return { text: 'NO CHANGE', cls: '' };
+    if (!pct) return { text: '변동 없음', cls: '' };
     var better = direction === 'down-is-good' ? diff < 0
       : direction === 'up-is-bad' ? diff < 0 : diff > 0;
     return {
@@ -391,7 +397,7 @@
       var on = !state.hidden[sr.key];
       var btn = h('button', {
         class: 'legend-item', type: 'button', 'aria-pressed': String(on),
-        title: (on ? 'Hide ' : 'Show ') + sr.full
+        title: sr.full + (on ? ' 숨기기' : ' 표시')
       }, [
         h('span', { class: 'legend-key', style: 'background: ' + sr.color }),
         h('span', { text: sr.label }),
@@ -410,8 +416,8 @@
 
     clear(tableHost);
     tableHost.appendChild(h('table', { class: 'data' }, [
-      h('caption', { text: 'REPORTED EVENTS PER MONTH BY HAZARD CLASS' }),
-      h('thead', null, [h('tr', null, [h('th', { scope: 'col', text: 'MONTH' })].concat(
+      h('caption', { text: '재해구분별 월간 보고 건수' }),
+      h('thead', null, [h('tr', null, [h('th', { scope: 'col', text: '월' })].concat(
         series.map(function (sr) {
           return h('th', { scope: 'col', class: 'num', text: sr.label });
         })))]),
@@ -446,7 +452,7 @@
       viewBox: '0 0 ' + W + ' ' + H,
       role: 'img',
       tabindex: '0',
-      'aria-label': 'Reported events per month by hazard class. Use the table view for exact values.'
+      'aria-label': '재해구분별 월간 보고 건수. 정확한 값은 표 보기에서 확인.'
     });
 
     scale.ticks.forEach(function (t) {
@@ -458,7 +464,7 @@
     months.forEach(function (m, i) {
       svg.appendChild(s('text', {
         class: 'ax-text ax-text--mid', x: x(i), y: H - padB + 17,
-        text: (months.length > 9 ? m.slice(0, 3) : m).toUpperCase()
+        text: months.length > 9 ? m.split('.')[1] + '월' : m
       }));
     });
 
@@ -582,11 +588,11 @@
 
     clear(tableHost);
     tableHost.appendChild(h('table', { class: 'data' }, [
-      h('caption', { text: 'ACTIVE TASKINGS BY AREA OF OPERATIONS' }),
+      h('caption', { text: '작전지역별 진행 임무' }),
       h('thead', null, [h('tr', null, [
-        h('th', { scope: 'col', text: 'AO' }),
-        h('th', { scope: 'col', text: 'REGION' }),
-        h('th', { scope: 'col', class: 'num', text: 'TASKINGS' })
+        h('th', { scope: 'col', text: '부호' }),
+        h('th', { scope: 'col', text: '권역' }),
+        h('th', { scope: 'col', class: 'num', text: '임무' })
       ])]),
       h('tbody', null, counts.map(function (c) {
         return h('tr', null, [
@@ -611,7 +617,7 @@
     var svg = s('svg', {
       viewBox: '0 0 ' + W + ' ' + H,
       role: 'img',
-      'aria-label': 'Active taskings by area of operations, ranked.'
+      'aria-label': '작전지역별 진행 임무, 내림차순.'
     });
 
     scale.ticks.forEach(function (t) {
@@ -645,7 +651,7 @@
         tip.appendChild(h('p', { class: 'tip__t', text: row.code + ' · ' + row.label }));
         tip.appendChild(h('div', { class: 'tip__r' }, [
           h('span', { class: 'tip__k', style: 'background: var(--series-1)' }),
-          h('span', { text: 'TASKINGS' }),
+          h('span', { text: '임무' }),
           h('span', { class: 'tip__v', text: num(row.value) })
         ]));
         var rect = svg.getBoundingClientRect();
@@ -689,11 +695,11 @@
 
     clear(plot);
     if (!total) {
-      plot.appendChild(h('p', { class: 'empty', text: 'NO TASKINGS IN SCOPE' }));
+      plot.appendChild(h('p', { class: 'empty', text: '해당 범위에 임무 없음' }));
     } else {
       var stack = h('div', {
         class: 'stack', role: 'img',
-        'aria-label': 'Share of active taskings by message precedence'
+        'aria-label': '전문 우선순위별 진행 임무 비중'
       });
       parts.forEach(function (p) {
         if (!p.n) return;
@@ -701,7 +707,7 @@
           class: 'stack__seg',
           style: 'flex: ' + p.n + ' 1 0%; background: ' + STATUS_VAR[p.meta.token],
           title: p.meta.tier + ' ' + p.meta.label + ' — ' + num(p.n) +
-            ' taskings (' + p.pct.toFixed(1) + '%)'
+            '건 (' + p.pct.toFixed(1) + '%)'
         }));
       });
       plot.appendChild(stack);
@@ -725,7 +731,7 @@
     rows.forEach(function (r) { phases[r.phase] = (phases[r.phase] || 0) + 1; });
     var phaseHost = document.getElementById('phase-rows');
     clear(phaseHost);
-    ['EXECUTE', 'DEPLOY', 'ASSESS', 'SUSTAIN', 'RECOVER'].forEach(function (p) {
+    ['시행', '전개', '평가', '유지', '복구'].forEach(function (p) {
       phaseHost.appendChild(h('div', { class: 'row' }, [
         h('span', { class: 'row__label', text: p }),
         h('span', { class: 'row__n', text: num(phases[p] || 0) })
@@ -734,12 +740,12 @@
 
     clear(tableHost);
     tableHost.appendChild(h('table', { class: 'data' }, [
-      h('caption', { text: 'ACTIVE TASKINGS BY MESSAGE PRECEDENCE' }),
+      h('caption', { text: '전문 우선순위별 진행 임무' }),
       h('thead', null, [h('tr', null, [
-        h('th', { scope: 'col', text: 'CODE' }),
-        h('th', { scope: 'col', text: 'PRECEDENCE' }),
-        h('th', { scope: 'col', class: 'num', text: 'TASKINGS' }),
-        h('th', { scope: 'col', class: 'num', text: 'SHARE' })
+        h('th', { scope: 'col', text: '부호' }),
+        h('th', { scope: 'col', text: '우선순위' }),
+        h('th', { scope: 'col', class: 'num', text: '임무' }),
+        h('th', { scope: 'col', class: 'num', text: '비중' })
       ])]),
       h('tbody', null, parts.map(function (p) {
         return h('tr', null, [
@@ -759,18 +765,18 @@
     clear(host);
 
     document.getElementById('tasking-count').textContent =
-      num(rows.length) + ' / ' + num(D.incidents.length) + ' IN SCOPE';
+      num(rows.length) + ' / ' + num(D.incidents.length) + ' 건 범위 내';
 
     if (!rows.length) {
       host.appendChild(h('p', {
-        class: 'empty', text: 'NO TASKINGS MATCH CURRENT SCOPE — RESET FILTERS'
+        class: 'empty', text: '현재 범위에 해당하는 임무 없음 — 조건 초기화'
       }));
       return;
     }
 
-    var cols = ['TASK ID', 'CALLSIGN', 'PREC', 'EVENT', 'AO', 'GRID REF',
-      'CLASS', 'AFFECTED', 'ASSETS', 'LEAD ELEMENT', 'PHASE', 'LAST RPT'];
-    var nums = { AFFECTED: 1, ASSETS: 1, 'LAST RPT': 1 };
+    var cols = ['임무번호', '호출부호', '우선', '사건', '작전지역', '좌표',
+      '구분', '영향인구', '자산', '주관 기관', '단계', '최종보고'];
+    var nums = { '영향인구': 1, '자산': 1, '최종보고': 1 };
 
     var head = h('tr', null, cols.map(function (c) {
       return h('th', { scope: 'col', class: nums[c] ? 'num' : '', text: c });
@@ -802,8 +808,8 @@
 
     host.appendChild(h('table', { class: 'data' }, [
       h('caption', {
-        text: 'PRECEDENCE ORDER · SHOWING ' + Math.min(40, rows.length) + ' OF ' +
-          plural(rows.length, 'TASKING', 'TASKINGS')
+        text: '우선순위 순 · ' + num(rows.length) + '건 중 ' +
+          Math.min(40, rows.length) + '건 표시'
       }),
       h('thead', null, [head]),
       h('tbody', null, body)
@@ -824,18 +830,18 @@
           h('span', { class: 'meter__label', text: c.label }),
           pct >= 85 ? h('span', { class: 'chip chip--warning' }, [
             h('span', { class: 'chip__g', text: '●', 'aria-hidden': 'true' }),
-            h('span', { text: 'STRAINED' })
+            h('span', { text: '과부하' })
           ]) : null,
           h('span', { class: 'meter__v', text: pct + '%' })
         ]),
         h('div', {
           class: 'meter__track', role: 'meter', 'aria-valuenow': String(pct),
           'aria-valuemin': '0', 'aria-valuemax': '100',
-          'aria-label': c.label + ' committed'
+          'aria-label': c.label + ' 투입률'
         }, [h('div', { class: 'meter__fill', style: 'width: ' + pct + '%' })]),
         h('p', {
           class: 'meter__sub',
-          text: num(c.committed) + ' / ' + num(c.total) + ' ' + c.unit + ' COMMITTED'
+          text: num(c.committed) + ' / ' + num(c.total) + ' ' + c.unit + ' 투입'
         })
       ]));
     });
@@ -859,7 +865,7 @@
         var fig = document.getElementById(btn.getAttribute('data-toggle'));
         var on = btn.getAttribute('aria-pressed') === 'true';
         btn.setAttribute('aria-pressed', String(!on));
-        btn.textContent = on ? 'TBL' : 'PLOT';
+        btn.textContent = on ? '표' : '도표';
         fig.querySelector('[data-plot]').closest('.panel__body').hidden = !on;
         fig.querySelector('[data-table]').hidden = on;
       });
@@ -886,14 +892,13 @@
       return global.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     }
 
-    function paint() { btn.textContent = current() === 'dark' ? 'LIGHT' : 'DARK'; }
+    function paint() { btn.textContent = current() === 'dark' ? '밝게' : '어둡게'; }
   }
 
   /* Live link telemetry — the console reads as a session, not a static page. */
   function startTelemetry() {
     var L = D.link;
-    var MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    var MON = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 
     document.getElementById('opr').textContent = L.operator;
     document.getElementById('term').textContent = L.terminal;
@@ -917,17 +922,21 @@
     }
 
     function tick() {
+      /* The scenario layer freezes the terminal while a warning holds the
+         screen; nothing on this bar may advance until it is dismissed. */
+      if (global.WDMA_FROZEN) return;
+
       var d = new Date();
       dtgEl.textContent = pad2(d.getUTCDate()) + pad2(d.getUTCHours()) +
-        pad2(d.getUTCMinutes()) + 'Z ' + MON[d.getUTCMonth()] + ' ' +
-        String(d.getUTCFullYear()).slice(2);
+        pad2(d.getUTCMinutes()) + 'Z ' + String(d.getUTCFullYear()).slice(2) + '.' +
+        MON[d.getUTCMonth()];
 
       session += 1;
       sessionEl.textContent = hms(session);
 
       rekey -= 1;
       if (rekey <= 0) rekey = 15 * 60;
-      keymatEl.textContent = 'VALID · REKEY T-' +
+      keymatEl.textContent = '유효 · 재교환 T-' +
         pad2(Math.floor(rekey / 60)) + ':' + pad2(rekey % 60);
 
       if (session % 3 === 1) {
@@ -949,12 +958,12 @@
     renderPrecedence(rows);
     renderTasking(rows);
 
-    var bits = [state.region === 'all' ? 'ALL AO' : D.aoCode[state.region]];
-    bits.push(state.hazard === 'all' ? 'ALL CLASSES' : hazardMeta(state.hazard).short);
+    var bits = [state.region === 'all' ? '전 작전지역' : D.aoCode[state.region]];
+    bits.push(state.hazard === 'all' ? '전 재해구분' : hazardMeta(state.hazard).short);
     if (state.severity !== 'all') bits.push(sevMeta(state.severity).label);
-    bits.push(state.windowDays + 'D');
+    bits.push(state.windowDays + '일');
     document.getElementById('filter-summary').textContent =
-      bits.join(' · ') + ' — ' + plural(rows.length, 'TASKING', 'TASKINGS');
+      bits.join(' · ') + ' — 임무 ' + num(rows.length) + '건';
   }
 
   function init() {
