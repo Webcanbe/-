@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WDMA — Global Operations Command</title>
+  <meta name="description" content="World Disaster Management Authority — global operations command dashboard (interface prototype).">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>🛰️</text></svg>">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <div class="brand">
+      <span class="brand__seal" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3 12h18M12 3c2.6 2.6 2.6 15 0 18M12 3c-2.6 2.6-2.6 15 0 18"></path>
+        </svg>
+      </span>
+      <div>
+        <div class="brand__name">World Disaster Management Authority</div>
+        <div class="brand__unit">Global Operations Command · Directorate&nbsp;of&nbsp;Coordination</div>
+      </div>
+    </div>
+
+    <div class="topbar__spacer"></div>
+
+    <div class="topbar__meta">
+      <span class="condition">
+        <span class="condition__glyph" aria-hidden="true">◆</span>
+        Global condition: Elevated — Tier&nbsp;2
+      </span>
+      <span class="clock" id="clock">—</span>
+      <button class="iconbtn" type="button" id="theme-toggle">Dark mode</button>
+    </div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <p class="notice">
+    <strong>Interface prototype.</strong>
+    <span>This is a UI build only. Every figure, incident record and status indicator on
+    this page is simulated placeholder data — no live feed, telemetry or partner system
+    is connected.</span>
+  </p>
+
+  <!-- ================================================ partner directory -->
+  <section class="section" aria-labelledby="partners-title">
+    <div class="section__head">
+      <div>
+        <p class="section__eyebrow">Standing coordination framework</p>
+        <h1 class="section__title" id="partners-title">Partner Countries &amp; Institutions</h1>
+      </div>
+      <p class="section__note" id="partner-note"></p>
+    </div>
+
+    <div class="partner-grid" id="partner-grid"></div>
+
+    <section class="card states-card" aria-labelledby="states-title">
+      <div class="states-card__head">
+        <h3 class="partner-card__title" id="states-title">Member States</h3>
+        <span class="partner-card__count" id="state-count"></span>
+      </div>
+      <div class="state-grid" id="state-grid"></div>
+    </section>
+  </section>
+
+  <!-- ================================================ operations -->
+  <section class="section" aria-labelledby="ops-title">
+    <div class="section__head">
+      <div>
+        <p class="section__eyebrow">Live picture</p>
+        <h2 class="section__title" id="ops-title">Global Operations Overview</h2>
+      </div>
+      <p class="section__note" id="filter-summary"></p>
+    </div>
+
+    <div class="filterbar" role="group" aria-label="Scope filters for the operations view">
+      <div class="field">
+        <label class="field__label" for="f-region">Region</label>
+        <select id="f-region"></select>
+      </div>
+      <div class="field">
+        <label class="field__label" for="f-hazard">Hazard class</label>
+        <select id="f-hazard"></select>
+      </div>
+      <div class="field">
+        <label class="field__label" for="f-severity">Severity tier</label>
+        <select id="f-severity"></select>
+      </div>
+      <div class="field">
+        <label class="field__label" for="f-window">Reporting window</label>
+        <select id="f-window"></select>
+      </div>
+      <button class="iconbtn filterbar__reset" type="button" id="f-reset">Reset filters</button>
+    </div>
+
+    <div class="hero-grid">
+      <article class="card hero-card">
+        <p class="hero-card__label">Population under active advisory</p>
+        <p class="hero-figure" id="hero-figure">—</p>
+        <p class="hero-card__sub" id="hero-sub"></p>
+        <div class="hero-card__foot">
+          <div class="hero-stat">
+            <p class="hero-stat__k">Tier 1 critical</p>
+            <p class="hero-stat__v" id="hero-critical">—</p>
+          </div>
+          <div class="hero-stat">
+            <p class="hero-stat__k">Operations in scope</p>
+            <p class="hero-stat__v" id="hero-ops">—</p>
+          </div>
+          <div class="hero-stat">
+            <p class="hero-stat__k">Window</p>
+            <p class="hero-stat__v" id="hero-window">—</p>
+          </div>
+        </div>
+      </article>
+
+      <div class="tile-grid" id="tile-grid"></div>
+    </div>
+
+    <div class="chart-grid chart-grid--wide">
+      <figure class="card figure" id="fig-volume">
+        <div class="figure__head">
+          <div>
+            <figcaption class="figure__title">Reported events by hazard class</figcaption>
+            <p class="figure__caption">
+              Total reported events per month · scoped by region and hazard class
+            </p>
+          </div>
+          <button class="figure__toggle" type="button"
+                  data-table-toggle="fig-volume" aria-pressed="false">Table</button>
+        </div>
+        <div class="figure__plot" data-plot></div>
+        <div class="legend" data-legend></div>
+        <div class="figure__table" data-table hidden></div>
+      </figure>
+
+      <figure class="card figure" id="fig-severity">
+        <div class="figure__head">
+          <div>
+            <figcaption class="figure__title">Severity mix</figcaption>
+            <p class="figure__caption">Share of active operations by severity tier</p>
+          </div>
+          <button class="figure__toggle" type="button"
+                  data-table-toggle="fig-severity" aria-pressed="false">Table</button>
+        </div>
+        <div class="figure__plot" data-plot></div>
+        <div class="legend" data-legend></div>
+        <div class="watchlist-block" data-aux>
+          <p class="subhead">Tier 1 &amp; 2 watchlist</p>
+          <div class="watchlist" id="watchlist"></div>
+        </div>
+        <div class="figure__table" data-table hidden></div>
+      </figure>
+    </div>
+
+    <div class="chart-grid chart-grid--log">
+      <section class="card figure" aria-labelledby="log-title">
+        <div class="figure__head">
+          <div>
+            <h3 class="figure__title" id="log-title">Active incident log</h3>
+            <p class="figure__caption">Operations under coordination, highest severity first</p>
+          </div>
+          <span class="partner-card__count" id="incident-count"></span>
+        </div>
+        <div class="table-wrap" id="incident-table"></div>
+      </section>
+
+      <figure class="card figure" id="fig-region">
+        <div class="figure__head">
+          <div>
+            <figcaption class="figure__title">Active operations by region</figcaption>
+            <p class="figure__caption">Ranked, highest first</p>
+          </div>
+          <button class="figure__toggle" type="button"
+                  data-table-toggle="fig-region" aria-pressed="false">Table</button>
+        </div>
+        <div class="figure__plot" data-plot></div>
+        <div class="figure__table" data-table hidden></div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================================================ capacity -->
+  <section class="section" aria-labelledby="capacity-title">
+    <div class="section__head">
+      <div>
+        <p class="section__eyebrow">Standing readiness</p>
+        <h2 class="section__title" id="capacity-title">Deployable Capacity</h2>
+      </div>
+      <p class="section__note">
+        Global standing capacity across all partners — not scoped by the filters above
+      </p>
+    </div>
+
+    <div class="chart-grid chart-grid--wide">
+      <section class="card figure" aria-labelledby="meters-title">
+        <div class="figure__head">
+          <div>
+            <h3 class="figure__title" id="meters-title">Committed against available capacity</h3>
+            <p class="figure__caption">
+              Share of each partner-pledged capability currently under tasking
+            </p>
+          </div>
+        </div>
+        <div class="meters" id="capacity-meters"></div>
+      </section>
+
+      <section class="card figure" aria-labelledby="posture-title">
+        <div class="figure__head">
+          <div>
+            <h3 class="figure__title" id="posture-title">Command posture</h3>
+            <p class="figure__caption">Standing arrangements across the coordination framework</p>
+          </div>
+        </div>
+        <div class="sev-legend">
+          <div class="sev-row">
+            <span class="sev-row__tier">01</span>
+            <span>Liaison cells staffed</span>
+            <span class="sev-row__n">40 / 40</span>
+          </div>
+          <div class="sev-row">
+            <span class="sev-row__tier">02</span>
+            <span>Member states reporting</span>
+            <span class="sev-row__n">20 / 20</span>
+          </div>
+          <div class="sev-row">
+            <span class="sev-row__tier">03</span>
+            <span>Standing airlift agreements</span>
+            <span class="sev-row__n">14</span>
+          </div>
+          <div class="sev-row">
+            <span class="sev-row__tier">04</span>
+            <span>Pre-positioned stockpile sites</span>
+            <span class="sev-row__n">62</span>
+          </div>
+          <div class="sev-row">
+            <span class="sev-row__tier">05</span>
+            <span>Contingency funding facilities</span>
+            <span class="sev-row__n">9</span>
+          </div>
+          <div class="sev-row">
+            <span class="sev-row__tier">06</span>
+            <span>Joint exercises this quarter</span>
+            <span class="sev-row__n">7</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>World Disaster Management Authority · Global Operations Command</span>
+    <span class="footer__spacer"></span>
+    <span>Interface prototype — simulated data</span>
+    <span>Build 0.1.0</span>
+  </footer>
+
+</main>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
